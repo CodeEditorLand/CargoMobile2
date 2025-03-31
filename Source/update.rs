@@ -14,7 +14,7 @@ use crate::{
 	},
 };
 
-static ENABLED_FEATURES:&[&str] = &[
+static ENABLED_FEATURES: &[&str] = &[
 	#[cfg(feature = "brainium")]
 	"brainium",
 	"cli",
@@ -24,14 +24,14 @@ static ENABLED_FEATURES:&[&str] = &[
 pub enum Error {
 	NoHomeDir(util::NoHomeDir),
 	StatusFailed(repo::Error),
-	MarkerCreateFailed { path:PathBuf, cause:io::Error },
+	MarkerCreateFailed { path: PathBuf, cause: io::Error },
 	UpdateFailed(repo::Error),
 	InstallFailed(std::io::Error),
-	MarkerDeleteFailed { path:PathBuf, cause:io::Error },
+	MarkerDeleteFailed { path: PathBuf, cause: io::Error },
 }
 
 impl Display for Error {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::NoHomeDir(err) => write!(f, "{}", err),
 			Self::StatusFailed(err) => {
@@ -57,7 +57,7 @@ pub(crate) fn cargo_mobile_repo() -> Result<Repo, util::NoHomeDir> {
 	Repo::checkouts_dir("cargo-mobile2")
 }
 
-pub(crate) fn updating_marker_path(repo:&Repo) -> PathBuf {
+pub(crate) fn updating_marker_path(repo: &Repo) -> PathBuf {
 	repo.path()
 		.parent()
 		.expect("developer error: repo path had no parent")
@@ -66,7 +66,7 @@ pub(crate) fn updating_marker_path(repo:&Repo) -> PathBuf {
 		.join(".updating")
 }
 
-pub fn update(wrapper:&TextWrapper) -> Result<(), Error> {
+pub fn update(wrapper: &TextWrapper) -> Result<(), Error> {
 	let repo = cargo_mobile_repo().map_err(Error::NoHomeDir)?;
 
 	let marker = updating_marker_path(&repo);
@@ -80,8 +80,7 @@ pub fn update(wrapper:&TextWrapper) -> Result<(), Error> {
 	}
 
 	let msg = if marker_exists || repo.status().map_err(Error::StatusFailed)?.stale() {
-		File::create(&marker)
-			.map_err(|cause| Error::MarkerCreateFailed { path:marker.to_owned(), cause })?;
+		File::create(&marker).map_err(|cause| Error::MarkerCreateFailed { path: marker.to_owned(), cause })?;
 
 		repo.update("https://github.com/tauri-apps/cargo-mobile2", "dev")
 			.map_err(Error::UpdateFailed)?;
@@ -104,8 +103,7 @@ pub fn update(wrapper:&TextWrapper) -> Result<(), Error> {
 			.run()
 			.map_err(Error::InstallFailed)?;
 
-		fs::remove_file(&marker)
-			.map_err(|cause| Error::MarkerDeleteFailed { path:marker.to_owned(), cause })?;
+		fs::remove_file(&marker).map_err(|cause| Error::MarkerDeleteFailed { path: marker.to_owned(), cause })?;
 
 		log::info!("deleted marker file at {:?}", marker);
 		"installed new version of `cargo-mobile2`"

@@ -22,7 +22,7 @@ pub enum Unrecoverable {
 	ContractHomeFailed(#[from] util::ContractHomeError),
 }
 
-pub fn exec(wrapper:&TextWrapper) -> Result<(), Unrecoverable> {
+pub fn exec(wrapper: &TextWrapper) -> Result<(), Unrecoverable> {
 	let env = Env::new()?;
 
 	section::cargo_mobile::check()?.print(wrapper);

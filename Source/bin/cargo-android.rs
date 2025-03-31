@@ -6,4 +6,6 @@ use cargo_mobile2::{
 	util::cli::exec,
 };
 
-fn main() { exec::<Input>(NAME) }
+fn main() {
+	exec::<Input>(NAME)
+}

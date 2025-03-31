@@ -34,7 +34,7 @@ pub enum EscapeFn {
 }
 
 impl Debug for EscapeFn {
-	fn fmt(&self, fmtr:&mut fmt::Formatter) -> fmt::Result {
+	fn fmt(&self, fmtr: &mut fmt::Formatter) -> fmt::Result {
 		fmtr.pad(match self {
 			Self::None => "None",
 			Self::Html => "Html",
@@ -44,11 +44,15 @@ impl Debug for EscapeFn {
 }
 
 impl Default for EscapeFn {
-	fn default() -> Self { Self::None }
+	fn default() -> Self {
+		Self::None
+	}
 }
 
 impl From<CustomEscapeFn> for EscapeFn {
-	fn from(custom:CustomEscapeFn) -> Self { Self::Custom(custom) }
+	fn from(custom: CustomEscapeFn) -> Self {
+		Self::Custom(custom)
+	}
 }
 
 /// An error encountered when rendering a template.
@@ -64,57 +68,59 @@ pub enum ProcessingError {
 	/// Failed to traverse files.
 	#[error("Failed to traverse templates at {src:?}: {cause}")]
 	Traversal {
-		src:PathBuf,
+		src: PathBuf,
 		#[source]
-		cause:TraversalError<RenderingError>,
+		cause: TraversalError<RenderingError>,
 	},
 	/// Failed to create directory.
 	#[error("Failed to create directory at {dest:?}: {cause}")]
 	DirectoryCreation {
-		dest:PathBuf,
+		dest: PathBuf,
 		#[source]
-		cause:io::Error,
+		cause: io::Error,
 	},
 	/// Failed to copy file.
 	#[error("Failed to copy file {src:?} to {dest:?}: {cause}")]
 	FileCopy {
-		src:PathBuf,
-		dest:PathBuf,
+		src: PathBuf,
+		dest: PathBuf,
 		#[source]
-		cause:io::Error,
+		cause: io::Error,
 	},
 	/// Failed to open or read input file.
 	#[error("Failed to read template at {src:?}: {cause}")]
 	TemplateRead {
-		src:PathBuf,
+		src: PathBuf,
 		#[source]
-		cause:io::Error,
+		cause: io::Error,
 	},
 	/// Failed to render template.
 	#[error("Failed to render template at {src:?}: {cause}")]
 	TemplateRender {
-		src:PathBuf,
+		src: PathBuf,
 		#[source]
-		cause:RenderingError,
+		cause: RenderingError,
 	},
 	/// Failed to create or write output file.
 	#[error("Failed to write template from {src:?} to {dest:?}: {cause}")]
 	TemplateWrite {
-		src:PathBuf,
-		dest:PathBuf,
+		src: PathBuf,
+		dest: PathBuf,
 		#[source]
-		cause:io::Error,
+		cause: io::Error,
 	},
 }
 
 #[derive(Debug)]
 pub struct Bicycle {
-	handlebars:Handlebars<'static>,
-	base_data:JsonMap,
+	handlebars: Handlebars<'static>,
+	base_data: JsonMap,
 }
 
 impl Default for Bicycle {
-	fn default() -> Self { Self::new(Default::default(), iter::empty(), Default::default()) }
+	fn default() -> Self {
+		Self::new(Default::default(), iter::empty(), Default::default())
+	}
 }
 
 impl Bicycle {
@@ -159,11 +165,9 @@ impl Bicycle {
 	/// );
 	/// ```
 	pub fn new<'helper_name>(
-		escape_fn:EscapeFn,
-		helpers:impl iter::IntoIterator<
-			Item = (&'helper_name str, Box<dyn HelperDef + Send + Sync + 'static>),
-		>,
-		base_data:JsonMap,
+		escape_fn: EscapeFn,
+		helpers: impl iter::IntoIterator<Item = (&'helper_name str, Box<dyn HelperDef + Send + Sync + 'static>)>,
+		base_data: JsonMap,
 	) -> Self {
 		let mut handlebars = Handlebars::new();
 
@@ -198,11 +202,7 @@ impl Bicycle {
 	/// 	.unwrap();
 	/// assert_eq!(rendered, "Hello Shinji!");
 	/// ```
-	pub fn render(
-		&self,
-		template:&str,
-		insert_data:impl FnOnce(&mut JsonMap),
-	) -> Result<String, RenderingError> {
+	pub fn render(&self, template: &str, insert_data: impl FnOnce(&mut JsonMap)) -> Result<String, RenderingError> {
 		let mut data = self.base_data.clone();
 
 		insert_data(&mut data);
@@ -231,22 +231,19 @@ impl Bicycle {
 	///   results in [`ProcessingError::TemplateReadFailed`],
 	///   [`ProcessingError::TemplateRenderFailed`], and
 	///   [`ProcessingError::TemplateWriteFailed`], respectively.
-	pub fn process_action(
-		&self,
-		action:&Action,
-		insert_data:impl Fn(&mut JsonMap),
-	) -> Result<(), ProcessingError> {
+	pub fn process_action(&self, action: &Action, insert_data: impl Fn(&mut JsonMap)) -> Result<(), ProcessingError> {
 		log::info!("{:#?}", action);
 
 		match action {
 			Action::CreateDirectory { dest } => {
-				fs::create_dir_all(dest).map_err(|cause| {
-					ProcessingError::DirectoryCreation { dest:dest.clone(), cause }
-				})?;
+				fs::create_dir_all(dest)
+					.map_err(|cause| ProcessingError::DirectoryCreation { dest: dest.clone(), cause })?;
 			},
 			Action::CopyFile { src, dest } => {
-				fs::copy(src, dest).map_err(|cause| {
-					ProcessingError::FileCopy { src:src.clone(), dest:dest.clone(), cause }
+				fs::copy(src, dest).map_err(|cause| ProcessingError::FileCopy {
+					src: src.clone(),
+					dest: dest.clone(),
+					cause,
 				})?;
 			},
 			Action::WriteTemplate { src, dest } => {
@@ -254,17 +251,15 @@ impl Bicycle {
 
 				fs::File::open(src)
 					.and_then(|mut file| file.read_to_string(&mut template))
-					.map_err(|cause| ProcessingError::TemplateRead { src:src.clone(), cause })?;
+					.map_err(|cause| ProcessingError::TemplateRead { src: src.clone(), cause })?;
 
 				let rendered = self
 					.render(&template, insert_data)
-					.map_err(|cause| ProcessingError::TemplateRender { src:src.clone(), cause })?;
+					.map_err(|cause| ProcessingError::TemplateRender { src: src.clone(), cause })?;
 
 				fs::File::create(dest)
 					.and_then(|mut file| file.write_all(rendered.as_bytes()))
-					.map_err(|cause| {
-						ProcessingError::TemplateWrite { src:src.clone(), dest:dest.clone(), cause }
-					})?;
+					.map_err(|cause| ProcessingError::TemplateWrite { src: src.clone(), dest: dest.clone(), cause })?;
 			},
 		}
 
@@ -275,8 +270,8 @@ impl Bicycle {
 	/// [`Bicycle::process_action`].
 	pub fn process_actions<'iter_item>(
 		&self,
-		actions:impl iter::Iterator<Item = &'iter_item Action>,
-		insert_data:impl Fn(&mut JsonMap),
+		actions: impl iter::Iterator<Item = &'iter_item Action>,
+		insert_data: impl Fn(&mut JsonMap),
 	) -> Result<(), ProcessingError> {
 		for action in actions {
 			self.process_action(action, &insert_data)?;
@@ -291,9 +286,9 @@ impl Bicycle {
 	/// the `template_ext` argument to [`traverse`](traverse()).
 	pub fn process(
 		&self,
-		src:impl AsRef<Path>,
-		dest:impl AsRef<Path>,
-		insert_data:impl Fn(&mut JsonMap),
+		src: impl AsRef<Path>,
+		dest: impl AsRef<Path>,
+		insert_data: impl Fn(&mut JsonMap),
 	) -> Result<(), ProcessingError> {
 		self.filter_and_process(src, dest, insert_data, |_| true)
 	}
@@ -302,18 +297,16 @@ impl Bicycle {
 	/// but applies a filter predicate to each action prior to processing it.
 	pub fn filter_and_process(
 		&self,
-		src:impl AsRef<Path>,
-		dest:impl AsRef<Path>,
-		insert_data:impl Fn(&mut JsonMap),
-		mut filter:impl FnMut(&Action) -> bool,
+		src: impl AsRef<Path>,
+		dest: impl AsRef<Path>,
+		insert_data: impl Fn(&mut JsonMap),
+		mut filter: impl FnMut(&Action) -> bool,
 	) -> Result<(), ProcessingError> {
 		let src = src.as_ref();
 
 		traverse(src, dest, |path| self.transform_path(path, &insert_data), DEFAULT_TEMPLATE_EXT)
-			.map_err(|cause| ProcessingError::Traversal { src:src.to_owned(), cause })
-			.and_then(|actions| {
-				self.process_actions(actions.iter().filter(|action| filter(action)), insert_data)
-			})
+			.map_err(|cause| ProcessingError::Traversal { src: src.to_owned(), cause })
+			.and_then(|actions| self.process_actions(actions.iter().filter(|action| filter(action)), insert_data))
 	}
 
 	/// Renders a path string itself as a template.
@@ -321,8 +314,8 @@ impl Bicycle {
 	/// [`traverse`](traverse()).
 	pub fn transform_path(
 		&self,
-		path:&Path,
-		insert_data:impl FnOnce(&mut JsonMap),
+		path: &Path,
+		insert_data: impl FnOnce(&mut JsonMap),
 	) -> Result<PathBuf, RenderingError> {
 		// On Windows, backslash is the path separator, and passing that
 		// to handlebars, will make it think that "path\to\{{something}}"

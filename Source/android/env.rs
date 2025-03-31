@@ -42,20 +42,24 @@ impl Reportable for Error {
 }
 
 impl Error {
-	pub fn sdk_or_ndk_issue(&self) -> bool { !matches!(self, Self::CoreEnvError(_)) }
+	pub fn sdk_or_ndk_issue(&self) -> bool {
+		!matches!(self, Self::CoreEnvError(_))
+	}
 }
 
 #[derive(Debug, Clone)]
 pub struct Env {
-	pub base:CoreEnv,
-	android_home:PathBuf,
-	pub ndk:ndk::Env,
+	pub base: CoreEnv,
+	android_home: PathBuf,
+	pub ndk: ndk::Env,
 }
 
 impl Env {
-	pub fn new() -> Result<Self, Error> { Self::from_env(CoreEnv::new()?) }
+	pub fn new() -> Result<Self, Error> {
+		Self::from_env(CoreEnv::new()?)
+	}
 
-	pub fn from_env(base:CoreEnv) -> Result<Self, Error> {
+	pub fn from_env(base: CoreEnv) -> Result<Self, Error> {
 		let android_home = std::env::var("ANDROID_HOME")
 			.map_err(Error::AndroidHomeNotSet)
 			.map(PathBuf::from)
@@ -99,20 +103,23 @@ impl Env {
 				}
 			})?;
 
-		Ok(Self { base, android_home, ndk:ndk::Env::new()? })
+		Ok(Self { base, android_home, ndk: ndk::Env::new()? })
 	}
 
-	pub fn path(&self) -> &OsString { self.base.path() }
+	pub fn path(&self) -> &OsString {
+		self.base.path()
+	}
 
-	pub fn android_home(&self) -> &str { self.android_home.as_path().to_str().unwrap() }
+	pub fn android_home(&self) -> &str {
+		self.android_home.as_path().to_str().unwrap()
+	}
 
 	pub fn platform_tools_path(&self) -> PathBuf {
 		PathBuf::from(&self.android_home).join("platform-tools")
 	}
 
 	pub fn sdk_version(&self) -> Result<source_props::Revision, source_props::Error> {
-		SourceProps::from_path(self.platform_tools_path().join("source.properties"))
-			.map(|props| props.pkg.revision)
+		SourceProps::from_path(self.platform_tools_path().join("source.properties")).map(|props| props.pkg.revision)
 	}
 }
 

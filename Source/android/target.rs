@@ -27,7 +27,7 @@ pub enum CargoMode {
 }
 
 impl fmt::Display for CargoMode {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			CargoMode::Check => write!(f, "check"),
 			CargoMode::Build => write!(f, "build"),
@@ -49,13 +49,15 @@ pub enum CompileLibError {
 	#[error("Failed to locate required build tool: {0}")]
 	MissingTool(ndk::MissingToolError),
 	#[error("`Failed to run `cargo {mode}`: {cause}")]
-	CargoFailed { mode:CargoMode, cause:std::io::Error },
+	CargoFailed { mode: CargoMode, cause: std::io::Error },
 	#[error("`Failed to write file at {path} : {cause}")]
-	FileWrite { path:PathBuf, cause:io::Error },
+	FileWrite { path: PathBuf, cause: io::Error },
 }
 
 impl Reportable for CompileLibError {
-	fn report(&self) -> Report { Report::error("Failed to compile lib", self) }
+	fn report(&self) -> Report {
+		Report::error("Failed to compile lib", self)
+	}
 }
 
 #[derive(Debug, Error)]
@@ -72,11 +74,13 @@ pub enum SymlinkLibsError {
 		"Library artifact not found at {path}. Make sure your Cargo.toml file has a [lib] block \
 		 with `crate-type = [\"staticlib\", \"cdylib\", \"rlib\"]`"
 	)]
-	LibNotFound { path:PathBuf },
+	LibNotFound { path: PathBuf },
 }
 
 impl Reportable for SymlinkLibsError {
-	fn report(&self) -> Report { Report::error("Failed to symlink lib", self) }
+	fn report(&self) -> Report {
+		Report::error("Failed to symlink lib", self)
+	}
 }
 
 #[derive(Debug, Error)]
@@ -98,18 +102,18 @@ impl Reportable for BuildError {
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Target<'a> {
-	pub triple:&'a str,
-	clang_triple_override:Option<&'a str>,
-	binutils_triple_override:Option<&'a str>,
-	pub abi:&'a str,
-	pub arch:&'a str,
+	pub triple: &'a str,
+	clang_triple_override: Option<&'a str>,
+	binutils_triple_override: Option<&'a str>,
+	pub abi: &'a str,
+	pub arch: &'a str,
 }
 
 impl<'a> TargetTrait<'a> for Target<'a> {
-	const DEFAULT_KEY:&'static str = "aarch64";
+	const DEFAULT_KEY: &'static str = "aarch64";
 
 	fn all() -> &'a BTreeMap<&'a str, Self> {
-		static TARGETS:OnceCell<BTreeMap<&'static str, Target<'static>>> = OnceCell::new();
+		static TARGETS: OnceCell<BTreeMap<&'static str, Target<'static>>> = OnceCell::new();
 
 		TARGETS.get_or_init(|| {
 			let mut targets = BTreeMap::new();
@@ -117,44 +121,44 @@ impl<'a> TargetTrait<'a> for Target<'a> {
 			targets.insert(
 				"aarch64",
 				Target {
-					triple:"aarch64-linux-android",
-					clang_triple_override:None,
-					binutils_triple_override:None,
-					abi:"arm64-v8a",
-					arch:"arm64",
+					triple: "aarch64-linux-android",
+					clang_triple_override: None,
+					binutils_triple_override: None,
+					abi: "arm64-v8a",
+					arch: "arm64",
 				},
 			);
 
 			targets.insert(
 				"armv7",
 				Target {
-					triple:"armv7-linux-androideabi",
-					clang_triple_override:Some("armv7a-linux-androideabi"),
-					binutils_triple_override:Some("arm-linux-androideabi"),
-					abi:"armeabi-v7a",
-					arch:"arm",
+					triple: "armv7-linux-androideabi",
+					clang_triple_override: Some("armv7a-linux-androideabi"),
+					binutils_triple_override: Some("arm-linux-androideabi"),
+					abi: "armeabi-v7a",
+					arch: "arm",
 				},
 			);
 
 			targets.insert(
 				"i686",
 				Target {
-					triple:"i686-linux-android",
-					clang_triple_override:None,
-					binutils_triple_override:None,
-					abi:"x86",
-					arch:"x86",
+					triple: "i686-linux-android",
+					clang_triple_override: None,
+					binutils_triple_override: None,
+					abi: "x86",
+					arch: "x86",
 				},
 			);
 
 			targets.insert(
 				"x86_64",
 				Target {
-					triple:"x86_64-linux-android",
-					clang_triple_override:None,
-					binutils_triple_override:None,
-					abi:"x86_64",
-					arch:"x86_64",
+					triple: "x86_64-linux-android",
+					clang_triple_override: None,
+					binutils_triple_override: None,
+					abi: "x86_64",
+					arch: "x86_64",
 				},
 			);
 
@@ -162,19 +166,29 @@ impl<'a> TargetTrait<'a> for Target<'a> {
 		})
 	}
 
-	fn name_list() -> Vec<&'a str> { Self::all().keys().copied().collect::<Vec<_>>() }
+	fn name_list() -> Vec<&'a str> {
+		Self::all().keys().copied().collect::<Vec<_>>()
+	}
 
-	fn triple(&'a self) -> &'a str { self.triple }
+	fn triple(&'a self) -> &'a str {
+		self.triple
+	}
 
-	fn arch(&'a self) -> &'a str { self.arch }
+	fn arch(&'a self) -> &'a str {
+		self.arch
+	}
 }
 
 impl<'a> Target<'a> {
-	fn clang_triple(&self) -> &'a str { self.clang_triple_override.unwrap_or(self.triple) }
+	fn clang_triple(&self) -> &'a str {
+		self.clang_triple_override.unwrap_or(self.triple)
+	}
 
-	fn binutils_triple(&self) -> &'a str { self.binutils_triple_override.unwrap_or(self.triple) }
+	fn binutils_triple(&self) -> &'a str {
+		self.binutils_triple_override.unwrap_or(self.triple)
+	}
 
-	pub fn for_abi(abi:&str) -> Option<&'a Self> {
+	pub fn for_abi(abi: &str) -> Option<&'a Self> {
 		Self::all().values().find(|target| target.abi == abi)
 	}
 
@@ -188,11 +202,7 @@ impl<'a> Target<'a> {
 		}
 	}
 
-	pub fn generate_cargo_config(
-		&self,
-		config:&Config,
-		env:&Env,
-	) -> Result<DotCargoTarget, ndk::MissingToolError> {
+	pub fn generate_cargo_config(&self, config: &Config, env: &Env) -> Result<DotCargoTarget, ndk::MissingToolError> {
 		// Using clang as the linker seems to be the only way to get the right
 		// library search paths...
 		let linker = env
@@ -202,8 +212,8 @@ impl<'a> Target<'a> {
 			.to_string();
 
 		Ok(DotCargoTarget {
-			linker:Some(linker),
-			rustflags:vec![
+			linker: Some(linker),
+			rustflags: vec![
 				"-Clink-arg=-landroid".to_owned(),
 				"-Clink-arg=-llog".to_owned(),
 				"-Clink-arg=-lOpenSLES".to_owned(),
@@ -214,13 +224,13 @@ impl<'a> Target<'a> {
 	#[allow(clippy::too_many_arguments)]
 	fn compile_lib(
 		&self,
-		config:&Config,
-		metadata:&Metadata,
-		env:&Env,
-		noise_level:NoiseLevel,
-		force_color:bool,
-		profile:Profile,
-		mode:CargoMode,
+		config: &Config,
+		metadata: &Metadata,
+		env: &Env,
+		noise_level: NoiseLevel,
+		force_color: bool,
+		profile: Profile,
+		mode: CargoMode,
 	) -> Result<(), CompileLibError> {
 		let min_sdk_version = config.min_sdk_version();
 
@@ -265,11 +275,11 @@ impl<'a> Target<'a> {
 
 	pub fn check(
 		&self,
-		config:&Config,
-		metadata:&Metadata,
-		env:&Env,
-		noise_level:NoiseLevel,
-		force_color:bool,
+		config: &Config,
+		metadata: &Metadata,
+		env: &Env,
+		noise_level: NoiseLevel,
+		force_color: bool,
 	) -> Result<(), CompileLibError> {
 		self.compile_lib(
 			config,
@@ -282,19 +292,13 @@ impl<'a> Target<'a> {
 		)
 	}
 
-	pub fn symlink_libs(
-		&self,
-		config:&Config,
-		ndk:&ndk::Env,
-		profile:Profile,
-	) -> Result<(), SymlinkLibsError> {
-		let jnilibs =
-			JniLibs::create(config, *self).map_err(SymlinkLibsError::JniLibsCreationFailed)?;
+	pub fn symlink_libs(&self, config: &Config, ndk: &ndk::Env, profile: Profile) -> Result<(), SymlinkLibsError> {
+		let jnilibs = JniLibs::create(config, *self).map_err(SymlinkLibsError::JniLibsCreationFailed)?;
 
 		let src = config.app().target_dir(self.triple, profile).join(config.so_name());
 
 		if !src.exists() {
-			return Err(SymlinkLibsError::LibNotFound { path:src });
+			return Err(SymlinkLibsError::LibNotFound { path: src });
 		}
 
 		jnilibs.symlink_lib(&src).map_err(SymlinkLibsError::SymlinkFailed)?;
@@ -319,23 +323,15 @@ impl<'a> Target<'a> {
 
 	pub fn build(
 		&self,
-		config:&Config,
-		metadata:&Metadata,
-		env:&Env,
-		noise_level:NoiseLevel,
-		force_color:bool,
-		profile:Profile,
+		config: &Config,
+		metadata: &Metadata,
+		env: &Env,
+		noise_level: NoiseLevel,
+		force_color: bool,
+		profile: Profile,
 	) -> Result<(), BuildError> {
-		self.compile_lib(
-			config,
-			metadata,
-			env,
-			noise_level,
-			force_color,
-			profile,
-			CargoMode::Build,
-		)
-		.map_err(BuildError::BuildFailed)?;
+		self.compile_lib(config, metadata, env, noise_level, force_color, profile, CargoMode::Build)
+			.map_err(BuildError::BuildFailed)?;
 
 		self.symlink_libs(config, &env.ndk, profile)
 			.map_err(BuildError::SymlinkLibsFailed)

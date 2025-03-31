@@ -10,15 +10,15 @@ pub enum Error {
 	#[error("Xcode doesn't appear to be installed.")]
 	XcodeNotInstalled,
 	#[error("The major version {major:?} wasn't a valid number: {source}")]
-	MajorVersionInvalid { major:String, source:std::num::ParseIntError },
+	MajorVersionInvalid { major: String, source: std::num::ParseIntError },
 	#[error("The minor version {minor:?} wasn't a valid number: {source}")]
-	MinorVersionInvalid { minor:String, source:std::num::ParseIntError },
+	MinorVersionInvalid { minor: String, source: std::num::ParseIntError },
 }
 
 // There's a bunch more info available, but the version is all we need for now.
 #[derive(Debug)]
 pub struct DeveloperTools {
-	pub version:(u32, u32),
+	pub version: (u32, u32),
 }
 
 impl DeveloperTools {
@@ -37,28 +37,26 @@ impl DeveloperTools {
 		} else {
 			let caps = regex!(r"\bVersion: (?P<major>\d+)\.(?P<minor>\d+)\b")
 				.captures(&output)
-				.ok_or_else(|| {
-					util::RunAndSearchError::SearchFailed {
-						command:command_string,
-						output:output.to_owned(),
-					}
+				.ok_or_else(|| util::RunAndSearchError::SearchFailed {
+					command: command_string,
+					output: output.to_owned(),
 				})?;
 
 			let major = {
 				let raw = &caps["major"];
 
 				raw.parse::<u32>()
-					.map_err(|source| Error::MajorVersionInvalid { major:raw.to_owned(), source })?
+					.map_err(|source| Error::MajorVersionInvalid { major: raw.to_owned(), source })?
 			};
 
 			let minor = {
 				let raw = &caps["minor"];
 
 				raw.parse::<u32>()
-					.map_err(|source| Error::MinorVersionInvalid { minor:raw.to_owned(), source })?
+					.map_err(|source| Error::MinorVersionInvalid { minor: raw.to_owned(), source })?
 			};
 
-			Ok(Self { version:(major, minor) })
+			Ok(Self { version: (major, minor) })
 		}
 	}
 }

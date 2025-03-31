@@ -19,14 +19,12 @@ use crate::{
 	opts::{self, NoiseLevel, Profile},
 	target::TargetTrait,
 	util::{
-		self,
-		CargoCommand,
-		WithWorkingDirError,
+		self, CargoCommand, WithWorkingDirError,
 		cli::{Report, Reportable},
 	},
 };
 
-fn verbosity(noise_level:opts::NoiseLevel) -> Option<&'static str> {
+fn verbosity(noise_level: opts::NoiseLevel) -> Option<&'static str> {
 	if noise_level.pedantic() { None } else { Some("-quiet") }
 }
 
@@ -39,22 +37,20 @@ pub enum VersionCheckError {
         .you_need.0, .you_need.1,
         .you_have.0, .you_have.1
     )]
-	TooLow { msg:&'static str, you_have:(u32, u32), you_need:(u32, u32) },
+	TooLow { msg: &'static str, you_have: (u32, u32), you_need: (u32, u32) },
 }
 
 impl Reportable for VersionCheckError {
 	fn report(&self) -> Report {
 		match self {
 			Self::LookupFailed(err) => Report::error("Failed to lookup Xcode version", err),
-			Self::TooLow { msg, you_have, you_need } => {
-				Report::action_request(
-					"Installed Xcode version too low; please upgrade and try again",
-					format!(
-						"{} Xcode {}.{}; you have Xcode {}.{}.",
-						msg, you_need.0, you_need.1, you_have.0, you_have.1
-					),
-				)
-			},
+			Self::TooLow { msg, you_have, you_need } => Report::action_request(
+				"Installed Xcode version too low; please upgrade and try again",
+				format!(
+					"{} Xcode {}.{}; you have Xcode {}.{}.",
+					msg, you_need.0, you_need.1, you_have.0, you_have.1
+				),
+			),
 		}
 	}
 }
@@ -96,7 +92,9 @@ impl Reportable for CompileLibError {
 pub struct BuildError(#[from] std::io::Error);
 
 impl Reportable for BuildError {
-	fn report(&self) -> Report { Report::error("Failed to build via `xcodebuild`", &self.0) }
+	fn report(&self) -> Report {
+		Report::error("Failed to build via `xcodebuild`", &self.0)
+	}
 }
 
 #[derive(Debug, Error)]
@@ -128,13 +126,13 @@ impl Reportable for ExportError {
 
 #[derive(Default)]
 pub struct XcodebuildOptions {
-	allow_provisioning_updates:bool,
-	skip_codesign:bool,
-	authentication_credentials:Option<AuthCredentials>,
+	allow_provisioning_updates: bool,
+	skip_codesign: bool,
+	authentication_credentials: Option<AuthCredentials>,
 }
 
 impl XcodebuildOptions {
-	fn args_for(&self, cmd:&mut Command) {
+	fn args_for(&self, cmd: &mut Command) {
 		if self.skip_codesign {
 			cmd.args([
 				"CODE_SIGNING_REQUIRED=NO",
@@ -159,11 +157,13 @@ impl XcodebuildOptions {
 
 #[derive(Default)]
 pub struct ExportConfig {
-	xcodebuild_options:XcodebuildOptions,
+	xcodebuild_options: XcodebuildOptions,
 }
 
 impl ExportConfig {
-	pub fn new() -> Self { Self::default() }
+	pub fn new() -> Self {
+		Self::default()
+	}
 
 	pub fn allow_provisioning_updates(mut self) -> Self {
 		self.xcodebuild_options.allow_provisioning_updates = true;
@@ -171,7 +171,7 @@ impl ExportConfig {
 		self
 	}
 
-	pub fn authentication_credentials(mut self, credentials:AuthCredentials) -> Self {
+	pub fn authentication_credentials(mut self, credentials: AuthCredentials) -> Self {
 		self.xcodebuild_options.authentication_credentials.replace(credentials);
 
 		self
@@ -180,11 +180,13 @@ impl ExportConfig {
 
 #[derive(Default)]
 pub struct BuildConfig {
-	xcodebuild_options:XcodebuildOptions,
+	xcodebuild_options: XcodebuildOptions,
 }
 
 impl BuildConfig {
-	pub fn new() -> Self { Self::default() }
+	pub fn new() -> Self {
+		Self::default()
+	}
 
 	pub fn allow_provisioning_updates(mut self) -> Self {
 		self.xcodebuild_options.allow_provisioning_updates = true;
@@ -198,7 +200,7 @@ impl BuildConfig {
 		self
 	}
 
-	pub fn authentication_credentials(mut self, credentials:AuthCredentials) -> Self {
+	pub fn authentication_credentials(mut self, credentials: AuthCredentials) -> Self {
 		self.xcodebuild_options.authentication_credentials.replace(credentials);
 
 		self
@@ -207,11 +209,13 @@ impl BuildConfig {
 
 #[derive(Default)]
 pub struct ArchiveConfig {
-	xcodebuild_options:XcodebuildOptions,
+	xcodebuild_options: XcodebuildOptions,
 }
 
 impl ArchiveConfig {
-	pub fn new() -> Self { Self::default() }
+	pub fn new() -> Self {
+		Self::default()
+	}
 
 	pub fn allow_provisioning_updates(mut self) -> Self {
 		self.xcodebuild_options.allow_provisioning_updates = true;
@@ -225,7 +229,7 @@ impl ArchiveConfig {
 		self
 	}
 
-	pub fn authentication_credentials(mut self, credentials:AuthCredentials) -> Self {
+	pub fn authentication_credentials(mut self, credentials: AuthCredentials) -> Self {
 		self.xcodebuild_options.authentication_credentials.replace(credentials);
 
 		self
@@ -234,18 +238,18 @@ impl ArchiveConfig {
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Target<'a> {
-	pub triple:&'a str,
-	pub arch:&'a str,
-	pub sdk:&'a str,
-	alias:Option<&'a str>,
-	min_xcode_version:Option<((u32, u32), &'static str)>,
+	pub triple: &'a str,
+	pub arch: &'a str,
+	pub sdk: &'a str,
+	alias: Option<&'a str>,
+	min_xcode_version: Option<((u32, u32), &'static str)>,
 }
 
 impl<'a> TargetTrait<'a> for Target<'a> {
-	const DEFAULT_KEY:&'static str = "aarch64";
+	const DEFAULT_KEY: &'static str = "aarch64";
 
 	fn all() -> &'a BTreeMap<&'a str, Self> {
-		static TARGETS:OnceCell<BTreeMap<&'static str, Target<'static>>> = OnceCell::new();
+		static TARGETS: OnceCell<BTreeMap<&'static str, Target<'static>>> = OnceCell::new();
 
 		TARGETS.get_or_init(|| {
 			let mut targets = BTreeMap::new();
@@ -253,38 +257,38 @@ impl<'a> TargetTrait<'a> for Target<'a> {
 			targets.insert(
 				"aarch64",
 				Target {
-					triple:"aarch64-apple-ios",
-					arch:"arm64",
-					sdk:"iphoneos",
-					alias:Some("arm64e"),
-					min_xcode_version:None,
+					triple: "aarch64-apple-ios",
+					arch: "arm64",
+					sdk: "iphoneos",
+					alias: Some("arm64e"),
+					min_xcode_version: None,
 				},
 			);
 
 			targets.insert(
 				"x86_64",
 				Target {
-					triple:"x86_64-apple-ios",
-					arch:"x86_64",
-					sdk:"iphonesimulator",
-					alias:None,
+					triple: "x86_64-apple-ios",
+					arch: "x86_64",
+					sdk: "iphonesimulator",
+					alias: None,
 					// Simulator only supports Metal as of Xcode 11.0:
 					// https://developer.apple.com/documentation/metal/developing_metal_apps_that_run_in_simulator?language=objc
 					// While this doesn't matter if you aren't using Metal,
 					// it should be fine to be opinionated about this given
 					// OpenGL's deprecation.
-					min_xcode_version:Some(((11, 0), "iOS Simulator doesn't support Metal until")),
+					min_xcode_version: Some(((11, 0), "iOS Simulator doesn't support Metal until")),
 				},
 			);
 
 			targets.insert(
 				"aarch64-sim",
 				Target {
-					triple:"aarch64-apple-ios-sim",
-					arch:"arm64-sim",
-					sdk:"iphonesimulator",
-					alias:Some("arm64e-sim"),
-					min_xcode_version:None,
+					triple: "aarch64-apple-ios-sim",
+					arch: "arm64-sim",
+					sdk: "iphonesimulator",
+					alias: Some("arm64e-sim"),
+					min_xcode_version: None,
 				},
 			);
 
@@ -292,28 +296,36 @@ impl<'a> TargetTrait<'a> for Target<'a> {
 		})
 	}
 
-	fn name_list() -> Vec<&'a str> { Self::all().keys().copied().collect::<Vec<_>>() }
+	fn name_list() -> Vec<&'a str> {
+		Self::all().keys().copied().collect::<Vec<_>>()
+	}
 
-	fn triple(&'a self) -> &'a str { self.triple }
+	fn triple(&'a self) -> &'a str {
+		self.triple
+	}
 
-	fn arch(&'a self) -> &'a str { self.arch }
+	fn arch(&'a self) -> &'a str {
+		self.arch
+	}
 }
 
 impl<'a> Target<'a> {
 	// TODO: Make this cleaner
 	pub fn macos() -> Self {
 		Self {
-			triple:"x86_64-apple-darwin",
-			arch:"x86_64",
-			sdk:"iphoneos",
-			alias:None,
-			min_xcode_version:None,
+			triple: "x86_64-apple-darwin",
+			arch: "x86_64",
+			sdk: "iphoneos",
+			alias: None,
+			min_xcode_version: None,
 		}
 	}
 
-	pub fn is_macos(&self) -> bool { *self == Self::macos() }
+	pub fn is_macos(&self) -> bool {
+		*self == Self::macos()
+	}
 
-	pub fn for_arch(arch:&str) -> Option<&'a Self> {
+	pub fn for_arch(arch: &str) -> Option<&'a Self> {
 		Self::all()
 			.values()
 			.find(|target| target.arch == arch || target.alias == Some(arch))
@@ -329,11 +341,7 @@ impl<'a> Target<'a> {
 				if installed_version >= min_version {
 					Ok(())
 				} else {
-					Err(VersionCheckError::TooLow {
-						msg,
-						you_have:installed_version,
-						you_need:min_version,
-					})
+					Err(VersionCheckError::TooLow { msg, you_have: installed_version, you_need: min_version })
 				}
 			})
 			.unwrap_or_else(|| Ok(()))
@@ -341,9 +349,9 @@ impl<'a> Target<'a> {
 
 	fn cargo(
 		&'a self,
-		config:&'a Config,
-		metadata:&'a Metadata,
-		subcommand:&'a str,
+		config: &'a Config,
+		metadata: &'a Metadata,
+		subcommand: &'a str,
 	) -> Result<CargoCommand<'a>, VersionCheckError> {
 		let metadata = if self.is_macos() { metadata.macos() } else { metadata.ios() };
 
@@ -360,10 +368,10 @@ impl<'a> Target<'a> {
 
 	pub fn check(
 		&self,
-		config:&Config,
-		metadata:&Metadata,
-		env:&Env,
-		noise_level:NoiseLevel,
+		config: &Config,
+		metadata: &Metadata,
+		env: &Env,
+		noise_level: NoiseLevel,
 	) -> Result<(), CheckError> {
 		self.cargo(config, metadata, "check")
 			.map_err(CheckError::VersionCheckFailed)?
@@ -381,13 +389,13 @@ impl<'a> Target<'a> {
 	#[allow(clippy::too_many_arguments)]
 	pub fn compile_lib(
 		&self,
-		config:&Config,
-		metadata:&Metadata,
-		noise_level:NoiseLevel,
-		force_color:bool,
-		profile:Profile,
-		env:&Env,
-		cc_env:HashMap<&str, &OsStr>,
+		config: &Config,
+		metadata: &Metadata,
+		noise_level: NoiseLevel,
+		force_color: bool,
+		profile: Profile,
+		env: &Env,
+		cc_env: HashMap<&str, &OsStr>,
 	) -> Result<(), CompileLibError> {
 		// Force color when running from CLI
 		let color = if force_color { "always" } else { "auto" };
@@ -411,11 +419,11 @@ impl<'a> Target<'a> {
 
 	pub fn build(
 		&self,
-		config:&Config,
-		env:&Env,
-		_noise_level:opts::NoiseLevel,
-		profile:opts::Profile,
-		build_config:BuildConfig,
+		config: &Config,
+		env: &Env,
+		_noise_level: opts::NoiseLevel,
+		profile: opts::Profile,
+		build_config: BuildConfig,
 	) -> Result<(), BuildError> {
 		let configuration = profile.as_str();
 
@@ -427,7 +435,7 @@ impl<'a> Target<'a> {
 
 		let arch = if self.is_macos() { Some(self.arch.to_string()) } else { None };
 
-		let args:Vec<OsString> = vec![];
+		let args: Vec<OsString> = vec![];
 
 		duct::cmd("xcodebuild", args)
 			.full_env(env.explicit_env())
@@ -457,12 +465,12 @@ impl<'a> Target<'a> {
 
 	pub fn archive(
 		&self,
-		config:&Config,
-		env:&Env,
-		noise_level:opts::NoiseLevel,
-		profile:opts::Profile,
-		build_number:Option<VersionNumber>,
-		archive_config:ArchiveConfig,
+		config: &Config,
+		env: &Env,
+		noise_level: opts::NoiseLevel,
+		profile: opts::Profile,
+		build_number: Option<VersionNumber>,
+		archive_config: ArchiveConfig,
 	) -> Result<(), ArchiveError> {
 		if let Some(build_number) = build_number {
 			util::with_working_dir(config.project_dir(), || {
@@ -485,7 +493,7 @@ impl<'a> Target<'a> {
 
 		let arch = if self.is_macos() { Some(self.arch.to_string()) } else { None };
 
-		let args:Vec<OsString> = vec![];
+		let args: Vec<OsString> = vec![];
 
 		duct::cmd("xcodebuild", args)
 			.full_env(env.explicit_env())
@@ -521,10 +529,10 @@ impl<'a> Target<'a> {
 
 	pub fn export(
 		&self,
-		config:&Config,
-		env:&Env,
-		noise_level:opts::NoiseLevel,
-		export_config:ExportConfig,
+		config: &Config,
+		env: &Env,
+		noise_level: opts::NoiseLevel,
+		export_config: ExportConfig,
 	) -> Result<(), ExportError> {
 		// Super fun discrepancy in expectation of `-archivePath` value
 		let archive_path = config.archive_dir().join(format!("{}.xcarchive", config.scheme()));
@@ -533,7 +541,7 @@ impl<'a> Target<'a> {
 
 		let export_plist_path = config.export_plist_path();
 
-		let args:Vec<OsString> = vec![];
+		let args: Vec<OsString> = vec![];
 
 		duct::cmd("xcodebuild", args)
 			.full_env(env.explicit_env())

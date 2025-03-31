@@ -14,7 +14,7 @@ pub enum LinkType {
 }
 
 impl Display for LinkType {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::Hard => write!(f, "hard"),
 			Self::Symbolic => write!(f, "symbolic"),
@@ -30,7 +30,7 @@ pub enum Clobber {
 }
 
 impl Display for Clobber {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::Never => write!(f, "clobbering disabled"),
 			Self::FileOnly => write!(f, "file clobbering enabled"),
@@ -48,7 +48,7 @@ pub enum TargetStyle {
 }
 
 impl Display for TargetStyle {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::File => write!(f, "file"),
 			Self::Directory => write!(f, "directory"),
@@ -65,7 +65,7 @@ pub enum ErrorCause {
 }
 
 impl Display for ErrorCause {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::MissingFileName => {
 				write!(f, "Neither the source nor target contained a file name.",)
@@ -95,29 +95,29 @@ See https://docs.microsoft.com/en-us/windows/security/threat-protection/security
 
 #[derive(Debug)]
 pub struct Error {
-	link_type:LinkType,
-	force:Clobber,
-	source:PathBuf,
-	target:PathBuf,
-	target_style:TargetStyle,
-	cause:ErrorCause,
+	link_type: LinkType,
+	force: Clobber,
+	source: PathBuf,
+	target: PathBuf,
+	target_style: TargetStyle,
+	cause: ErrorCause,
 }
 
 impl Error {
 	pub fn new(
-		link_type:LinkType,
-		force:Clobber,
-		source:PathBuf,
-		target:PathBuf,
-		target_style:TargetStyle,
-		cause:ErrorCause,
+		link_type: LinkType,
+		force: Clobber,
+		source: PathBuf,
+		target: PathBuf,
+		target_style: TargetStyle,
+		cause: ErrorCause,
 	) -> Self {
 		Self { link_type, force, source, target, target_style, cause }
 	}
 }
 
 impl Display for Error {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(
 			f,
 			"Failed to create a {} link from {:?} to {} {:?} ({}): {}",
@@ -130,21 +130,21 @@ impl std::error::Error for Error {}
 
 #[derive(Clone, Debug)]
 pub struct Call<'a> {
-	link_type:LinkType,
-	force:Clobber,
-	source:&'a Path,
-	target:&'a Path,
-	target_override:Cow<'a, Path>,
-	target_style:TargetStyle,
+	link_type: LinkType,
+	force: Clobber,
+	source: &'a Path,
+	target: &'a Path,
+	target_override: Cow<'a, Path>,
+	target_style: TargetStyle,
 }
 
 impl<'a> Call<'a> {
 	pub fn new(
-		link_type:LinkType,
-		force:Clobber,
-		source:&'a Path,
-		target:&'a Path,
-		target_style:TargetStyle,
+		link_type: LinkType,
+		force: Clobber,
+		source: &'a Path,
+		target: &'a Path,
+		target_style: TargetStyle,
 	) -> Result<Self, Error> {
 		let target_override = if let TargetStyle::Directory = target_style {
 			// If the target is a directory, then the link name has to come from
@@ -155,10 +155,10 @@ impl<'a> Call<'a> {
 				return Err(Error {
 					link_type,
 					force,
-					source:source.to_owned(),
-					target:target.to_owned(),
+					source: source.to_owned(),
+					target: target.to_owned(),
 					target_style,
-					cause:ErrorCause::MissingFileName,
+					cause: ErrorCause::MissingFileName,
 				});
 			}
 		} else {
@@ -181,8 +181,7 @@ impl<'a> Call<'a> {
 			},
 			Clobber::FileOrDirectory => {
 				if self.target_override.is_dir() {
-					remove_dir_all(self.target)
-						.map_err(|err| self.make_error(ErrorCause::IOError(err)))?;
+					remove_dir_all(self.target).map_err(|err| self.make_error(ErrorCause::IOError(err)))?;
 				}
 
 				args.push("-f");
@@ -206,22 +205,22 @@ impl<'a> Call<'a> {
 		Ok(())
 	}
 
-	fn make_error(&self, cause:ErrorCause) -> Error {
+	fn make_error(&self, cause: ErrorCause) -> Error {
 		Error {
-			link_type:self.link_type,
-			force:self.force,
-			source:self.source.to_owned(),
-			target:self.target.to_owned(),
-			target_style:self.target_style,
+			link_type: self.link_type,
+			force: self.force,
+			source: self.source.to_owned(),
+			target: self.target.to_owned(),
+			target_style: self.target_style,
 			cause,
 		}
 	}
 }
 
 pub fn force_symlink(
-	source:impl AsRef<Path>,
-	target:impl AsRef<Path>,
-	target_style:TargetStyle,
+	source: impl AsRef<Path>,
+	target: impl AsRef<Path>,
+	target_style: TargetStyle,
 ) -> Result<(), Error> {
 	Call::new(
 		LinkType::Symbolic,
@@ -234,9 +233,9 @@ pub fn force_symlink(
 }
 
 pub fn force_symlink_relative(
-	abs_source:impl AsRef<Path>,
-	abs_target:impl AsRef<Path>,
-	target_style:TargetStyle,
+	abs_source: impl AsRef<Path>,
+	abs_target: impl AsRef<Path>,
+	target_style: TargetStyle,
 ) -> Result<(), Error> {
 	let (abs_source, abs_target) = (abs_source.as_ref(), abs_target.as_ref());
 
@@ -247,12 +246,12 @@ pub fn force_symlink_relative(
 			force_symlink(rel_source, abs_target.join(file_name), TargetStyle::File)
 		} else {
 			Err(Error {
-				link_type:LinkType::Symbolic,
-				force:Clobber::FileOrDirectory,
-				source:rel_source,
-				target:abs_target.to_owned(),
+				link_type: LinkType::Symbolic,
+				force: Clobber::FileOrDirectory,
+				source: rel_source,
+				target: abs_target.to_owned(),
 				target_style,
-				cause:ErrorCause::MissingFileName,
+				cause: ErrorCause::MissingFileName,
 			})
 		}
 	} else {

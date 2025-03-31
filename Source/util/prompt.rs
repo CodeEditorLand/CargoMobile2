@@ -5,7 +5,7 @@ use std::{
 
 use colored::{Color, Colorize as _};
 
-pub fn minimal(msg:impl Display) -> io::Result<String> {
+pub fn minimal(msg: impl Display) -> io::Result<String> {
 	let mut input = String::new();
 
 	print!("{}: ", msg);
@@ -17,11 +17,7 @@ pub fn minimal(msg:impl Display) -> io::Result<String> {
 	Ok(input.trim().to_owned())
 }
 
-pub fn default(
-	msg:impl Display,
-	default:Option<&str>,
-	default_color:Option<Color>,
-) -> io::Result<String> {
+pub fn default(msg: impl Display, default: Option<&str>, default_color: Option<Color>) -> io::Result<String> {
 	if let Some(default) = default {
 		let msg = if let Some(default_color) = default_color {
 			format!("{} ({})", msg, default.color(default_color).bold())
@@ -43,7 +39,7 @@ pub fn default(
 	})
 }
 
-pub fn yes_no(msg:impl Display, default:Option<bool>) -> io::Result<Option<bool>> {
+pub fn yes_no(msg: impl Display, default: Option<bool>) -> io::Result<Option<bool>> {
 	let y_n = match default {
 		Some(true) => "[Y/n]",
 		Some(false) => "[y/N]",
@@ -65,7 +61,7 @@ pub fn yes_no(msg:impl Display, default:Option<bool>) -> io::Result<Option<bool>
 	})
 }
 
-pub fn list_display_only(choices:impl Iterator<Item = impl Display>, choice_count:usize) {
+pub fn list_display_only(choices: impl Iterator<Item = impl Display>, choice_count: usize) {
 	if choice_count > 0 {
 		for (index, choice) in choices.enumerate() {
 			println!("  [{}] {}", index.to_string().green(), choice);
@@ -76,11 +72,11 @@ pub fn list_display_only(choices:impl Iterator<Item = impl Display>, choice_coun
 }
 
 pub fn list(
-	header:impl Display,
-	choices:impl ExactSizeIterator<Item = impl Display>,
-	noun:impl Display,
-	alternative:Option<&str>,
-	msg:impl Display,
+	header: impl Display,
+	choices: impl ExactSizeIterator<Item = impl Display>,
+	noun: impl Display,
+	alternative: Option<&str>,
+	msg: impl Display,
 ) -> io::Result<usize> {
 	println!("{}:", header);
 
@@ -100,8 +96,7 @@ pub fn list(
 	}
 
 	loop {
-		let response =
-			default(&msg, if choice_count == 1 { Some("0") } else { None }, Some(Color::Green))?;
+		let response = default(&msg, if choice_count == 1 { Some("0") } else { None }, Some(Color::Green))?;
 
 		if !response.is_empty() {
 			if let Ok(index) = response.parse::<usize>() {

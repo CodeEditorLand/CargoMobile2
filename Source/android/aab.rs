@@ -9,8 +9,7 @@ use crate::{
 	opts::{NoiseLevel, Profile},
 	util::{
 		cli::{Report, Reportable},
-		gradlew,
-		prefix_path,
+		gradlew, prefix_path,
 	},
 };
 
@@ -30,12 +29,12 @@ impl Reportable for AabError {
 
 /// Builds AAB(s) and returns the built AAB(s) paths
 pub fn build(
-	config:&Config,
-	env:&Env,
-	noise_level:NoiseLevel,
-	profile:Profile,
-	targets:Vec<&Target>,
-	split_per_abi:bool,
+	config: &Config,
+	env: &Env,
+	noise_level: NoiseLevel,
+	profile: Profile,
+	targets: Vec<&Target>,
+	split_per_abi: bool,
 ) -> Result<Vec<PathBuf>, AabError> {
 	let build_ty = profile.as_str().to_upper_camel_case();
 
@@ -49,14 +48,8 @@ pub fn build(
 
 		if !targets.is_empty() {
 			args.extend_from_slice(&[
-				format!(
-					"-PabiList={}",
-					targets.iter().map(|t| t.abi).collect::<Vec<_>>().join(",")
-				),
-				format!(
-					"-ParchList={}",
-					targets.iter().map(|t| t.arch).collect::<Vec<_>>().join(",")
-				),
+				format!("-PabiList={}", targets.iter().map(|t| t.abi).collect::<Vec<_>>().join(",")),
+				format!("-ParchList={}", targets.iter().map(|t| t.arch).collect::<Vec<_>>().join(",")),
 				format!(
 					"-PtargetList={}",
 					targets
@@ -107,7 +100,7 @@ pub fn build(
 	Ok(outputs)
 }
 
-pub fn aab_path(config:&Config, profile:Profile, flavor:&str) -> PathBuf {
+pub fn aab_path(config: &Config, profile: Profile, flavor: &str) -> PathBuf {
 	prefix_path(
 		config.project_dir(),
 		format!(
@@ -125,12 +118,12 @@ pub mod cli {
 	use super::*;
 
 	pub fn build(
-		config:&Config,
-		env:&Env,
-		noise_level:NoiseLevel,
-		profile:Profile,
-		targets:Vec<&Target>,
-		split_per_abi:bool,
+		config: &Config,
+		env: &Env,
+		noise_level: NoiseLevel,
+		profile: Profile,
+		targets: Vec<&Target>,
+		split_per_abi: bool,
 	) -> Result<(), AabError> {
 		println!(
 			"Building{} AAB{} for {} ...\n",

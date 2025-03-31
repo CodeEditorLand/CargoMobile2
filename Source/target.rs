@@ -7,7 +7,7 @@ use std::{
 use crate::util;
 
 pub trait TargetTrait<'a>: Debug + Sized {
-	const DEFAULT_KEY:&'static str;
+	const DEFAULT_KEY: &'static str;
 
 	fn all() -> &'a BTreeMap<&'a str, Self>;
 
@@ -19,9 +19,11 @@ pub trait TargetTrait<'a>: Debug + Sized {
 			.expect("developer error: no target matched `DEFAULT_KEY`")
 	}
 
-	fn for_name(name:&str) -> Option<&'a Self> { Self::all().get(name) }
+	fn for_name(name: &str) -> Option<&'a Self> {
+		Self::all().get(name)
+	}
 
-	fn for_arch(arch:&str) -> Option<&'a Self> {
+	fn for_arch(arch: &str) -> Option<&'a Self> {
 		Self::all().values().find(|target| target.arch() == arch)
 	}
 
@@ -29,11 +31,14 @@ pub trait TargetTrait<'a>: Debug + Sized {
 
 	fn arch(&'a self) -> &'a str;
 
-	fn install(&'a self) -> Result<ExitStatus, std::io::Error> { util::rustup_add(self.triple()) }
+	fn install(&'a self) -> Result<ExitStatus, std::io::Error> {
+		util::rustup_add(self.triple())
+	}
 
 	fn install_all() -> Result<(), std::io::Error>
 	where
-		Self: 'a, {
+		Self: 'a,
+	{
 		for target in Self::all().values() {
 			target.install()?;
 		}
@@ -44,12 +49,12 @@ pub trait TargetTrait<'a>: Debug + Sized {
 
 #[derive(Debug)]
 pub struct TargetInvalid {
-	pub(crate) name:String,
-	pub(crate) possible:Vec<String>,
+	pub(crate) name: String,
+	pub(crate) possible: Vec<String>,
 }
 
 impl Display for TargetInvalid {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(
 			f,
 			"Target {:?} is invalid; the possible targets are {:?}",
@@ -60,24 +65,23 @@ impl Display for TargetInvalid {
 
 #[allow(clippy::type_complexity)]
 pub fn get_targets<'a, Iter, I, T, U>(
-	targets:Iter,
+	targets: Iter,
 	// we use `dyn` so the type doesn't need to be known when this is `None`
-	fallback:Option<(&'a dyn Fn(U) -> Option<&'a T>, U)>,
+	fallback: Option<(&'a dyn Fn(U) -> Option<&'a T>, U)>,
 ) -> Result<Vec<&'a T>, TargetInvalid>
 where
 	Iter: ExactSizeIterator<Item = &'a I>,
 	I: AsRef<str> + 'a,
-	T: TargetTrait<'a>, {
+	T: TargetTrait<'a>,
+{
 	let targets_empty = targets.len() == 0;
 
 	Ok(if !targets_empty {
 		targets
 			.map(|name| {
-				T::for_name(name.as_ref()).ok_or_else(|| {
-					TargetInvalid {
-						name:name.as_ref().to_owned(),
-						possible:T::all().keys().map(|key| key.to_string()).collect(),
-					}
+				T::for_name(name.as_ref()).ok_or_else(|| TargetInvalid {
+					name: name.as_ref().to_owned(),
+					possible: T::all().keys().map(|key| key.to_string()).collect(),
 				})
 			})
 			.collect::<Result<_, _>>()?
@@ -93,16 +97,17 @@ where
 }
 
 pub fn call_for_targets_with_fallback<'a, Iter, I, T, U, E, F>(
-	targets:Iter,
-	fallback:&'a dyn Fn(U) -> Option<&'a T>,
-	arg:U,
-	mut f:F,
+	targets: Iter,
+	fallback: &'a dyn Fn(U) -> Option<&'a T>,
+	arg: U,
+	mut f: F,
 ) -> Result<Result<(), E>, TargetInvalid>
 where
 	Iter: ExactSizeIterator<Item = &'a I>,
 	I: AsRef<str> + 'a,
 	T: TargetTrait<'a>,
-	F: FnMut(&T) -> Result<(), E>, {
+	F: FnMut(&T) -> Result<(), E>,
+{
 	get_targets(targets, Some((fallback, arg))).map(|targets| {
 		for target in targets {
 			f(target)?;
@@ -112,15 +117,13 @@ where
 	})
 }
 
-pub fn call_for_targets<'a, Iter, I, T, E, F>(
-	targets:Iter,
-	f:F,
-) -> Result<Result<(), E>, TargetInvalid>
+pub fn call_for_targets<'a, Iter, I, T, E, F>(targets: Iter, f: F) -> Result<Result<(), E>, TargetInvalid>
 where
 	Iter: ExactSizeIterator<Item = &'a I>,
 	I: AsRef<str> + 'a,
 	T: TargetTrait<'a> + 'a,
-	F: Fn(&T) -> Result<(), E>, {
+	F: Fn(&T) -> Result<(), E>,
+{
 	get_targets::<_, _, _, ()>(targets, None).map(|targets| {
 		for target in targets {
 			f(target)?;

@@ -4,8 +4,7 @@ mod init;
 
 use std::{
 	fmt::{self, Display},
-	fs,
-	io,
+	fs, io,
 	path::{Path, PathBuf},
 };
 
@@ -16,7 +15,7 @@ use crate::util::{self, Git};
 
 // These packs only show in builds using the brainium feature flag, and will
 // always be at the top of the list.
-static BRAINIUM:&[&str] = &["brainstorm"];
+static BRAINIUM: &[&str] = &["brainstorm"];
 
 fn platform_pack_dir() -> Result<PathBuf, util::NoHomeDir> {
 	util::install_dir().map(|dir| dir.join("templates/platforms"))
@@ -31,7 +30,7 @@ pub enum LookupError {
 	#[error(transparent)]
 	NoHomeDir(util::NoHomeDir),
 	#[error("Didn't find {name} template pack at {tried_toml} or {tried}")]
-	MissingPack { name:String, tried_toml:PathBuf, tried:PathBuf },
+	MissingPack { name: String, tried_toml: PathBuf, tried: PathBuf },
 	#[error(transparent)]
 	FancyPackParseFailed(FancyPackParseError),
 }
@@ -43,8 +42,8 @@ pub enum Pack {
 }
 
 impl Pack {
-	pub(super) fn lookup(dir:impl AsRef<Path>, name:impl AsRef<str>) -> Result<Self, LookupError> {
-		fn check_path(name:&str, path:&Path) -> Option<PathBuf> {
+	pub(super) fn lookup(dir: impl AsRef<Path>, name: impl AsRef<str>) -> Result<Self, LookupError> {
+		fn check_path(name: &str, path: &Path) -> Option<PathBuf> {
 			log::info!("checking for template pack \"{}\" at {:?}", name, path);
 
 			if path.exists() {
@@ -65,9 +64,9 @@ impl Pack {
 
 			let path = dir.join(name);
 
-			check_path(name, &toml_path).or_else(|| check_path(name, &path)).ok_or_else(|| {
-				LookupError::MissingPack { name:name.to_owned(), tried_toml:toml_path, tried:path }
-			})
+			check_path(name, &toml_path)
+				.or_else(|| check_path(name, &path))
+				.ok_or_else(|| LookupError::MissingPack { name: name.to_owned(), tried_toml: toml_path, tried: path })
 		}?;
 
 		if path.extension() == Some("toml".as_ref()) {
@@ -79,13 +78,13 @@ impl Pack {
 		}
 	}
 
-	pub fn lookup_platform(name:&str) -> Result<Self, LookupError> {
+	pub fn lookup_platform(name: &str) -> Result<Self, LookupError> {
 		platform_pack_dir()
 			.map_err(LookupError::NoHomeDir)
 			.and_then(|dir| Self::lookup(dir, name))
 	}
 
-	pub fn lookup_app(name:&str) -> Result<Self, LookupError> {
+	pub fn lookup_app(name: &str) -> Result<Self, LookupError> {
 		app_pack_dir()
 			.map_err(LookupError::NoHomeDir)
 			.and_then(|dir| Self::lookup(dir, name))
@@ -103,11 +102,7 @@ impl Pack {
 		if let Self::Fancy(pack) = self { pack.submodule_path() } else { None }
 	}
 
-	pub fn resolve(
-		&self,
-		git:Git<'_>,
-		submodule_commit:Option<&str>,
-	) -> Result<Vec<&Path>, FancyPackResolveError> {
+	pub fn resolve(&self, git: Git<'_>, submodule_commit: Option<&str>) -> Result<Vec<&Path>, FancyPackResolveError> {
 		match self {
 			Self::Simple(path) => {
 				if submodule_commit.is_some() {
@@ -128,12 +123,12 @@ impl Pack {
 #[derive(Debug)]
 pub enum ListError {
 	NoHomeDir(util::NoHomeDir),
-	DirReadFailed { dir:PathBuf, cause:io::Error },
-	DirEntryReadFailed { dir:PathBuf, cause:io::Error },
+	DirReadFailed { dir: PathBuf, cause: io::Error },
+	DirEntryReadFailed { dir: PathBuf, cause: io::Error },
 }
 
 impl Display for ListError {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::NoHomeDir(err) => write!(f, "{}", err),
 			Self::DirReadFailed { dir, cause } => {
@@ -151,11 +146,8 @@ pub fn list_app_packs() -> Result<Vec<String>, ListError> {
 
 	let mut packs = Vec::new();
 
-	for entry in
-		fs::read_dir(&dir).map_err(|cause| ListError::DirReadFailed { dir:dir.clone(), cause })?
-	{
-		let entry =
-			entry.map_err(|cause| ListError::DirEntryReadFailed { dir:dir.clone(), cause })?;
+	for entry in fs::read_dir(&dir).map_err(|cause| ListError::DirReadFailed { dir: dir.clone(), cause })? {
+		let entry = entry.map_err(|cause| ListError::DirEntryReadFailed { dir: dir.clone(), cause })?;
 
 		if let Some(name) = entry.path().file_stem() {
 			let name = name.to_string_lossy();

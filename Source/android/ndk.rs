@@ -19,19 +19,27 @@ use crate::{
 	},
 };
 
-const MIN_NDK_VERSION:NdkVersion = NdkVersion(VersionDouble::new(19, 0));
+const MIN_NDK_VERSION: NdkVersion = NdkVersion(VersionDouble::new(19, 0));
 
 #[cfg(target_os = "macos")]
-pub fn host_tag() -> &'static str { "darwin-x86_64" }
+pub fn host_tag() -> &'static str {
+	"darwin-x86_64"
+}
 
 #[cfg(target_os = "linux")]
-pub fn host_tag() -> &'static str { "linux-x86_64" }
+pub fn host_tag() -> &'static str {
+	"linux-x86_64"
+}
 
 #[cfg(all(windows, target_pointer_width = "32"))]
-pub fn host_tag() -> &'static str { "windows" }
+pub fn host_tag() -> &'static str {
+	"windows"
+}
 
 #[cfg(all(windows, target_pointer_width = "64"))]
-pub fn host_tag() -> &'static str { "windows-x86_64" }
+pub fn host_tag() -> &'static str {
+	"windows-x86_64"
+}
 
 #[derive(Clone, Copy, Debug)]
 pub enum Compiler {
@@ -65,17 +73,17 @@ impl Binutil {
 #[derive(Debug, Error)]
 #[error("Missing tool `{name}`; tried at {tried_path:?}.")]
 pub struct MissingToolError {
-	name:&'static str,
-	tried_path:PathBuf,
+	name: &'static str,
+	tried_path: PathBuf,
 }
 
 impl MissingToolError {
-	fn check_file(path:PathBuf, name:&'static str) -> Result<PathBuf, Self> {
-		if path.is_file() { Ok(path) } else { Err(Self { name, tried_path:path }) }
+	fn check_file(path: PathBuf, name: &'static str) -> Result<PathBuf, Self> {
+		if path.is_file() { Ok(path) } else { Err(Self { name, tried_path: path }) }
 	}
 
-	fn check_dir(path:PathBuf, name:&'static str) -> Result<PathBuf, Self> {
-		if path.is_dir() { Ok(path) } else { Err(Self { name, tried_path:path }) }
+	fn check_dir(path: PathBuf, name: &'static str) -> Result<PathBuf, Self> {
+		if path.is_dir() { Ok(path) } else { Err(Self { name, tried_path: path }) }
 	}
 }
 
@@ -83,7 +91,7 @@ impl MissingToolError {
 pub struct NdkVersion(VersionDouble);
 
 impl Display for NdkVersion {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "r{}", self.0.major)?;
 
 		if self.0.minor != 0 {
@@ -102,7 +110,7 @@ impl Display for NdkVersion {
 }
 
 impl From<source_props::Revision> for NdkVersion {
-	fn from(revision:source_props::Revision) -> Self {
+	fn from(revision: source_props::Revision) -> Self {
 		Self(VersionDouble::new(revision.triple.major, revision.triple.minor))
 	}
 }
@@ -123,11 +131,13 @@ pub enum Error {
 	#[error("Failed to lookup version of installed NDK: {0}")]
 	VersionLookupFailed(#[from] source_props::Error),
 	#[error("At least NDK {you_need} is required (you currently have NDK {you_have})")]
-	VersionTooLow { you_have:NdkVersion, you_need:NdkVersion },
+	VersionTooLow { you_have: NdkVersion, you_need: NdkVersion },
 }
 
 impl Reportable for Error {
-	fn report(&self) -> Report { Report::error("Failed to initialize NDK environment", self) }
+	fn report(&self) -> Report {
+		Report::error("Failed to initialize NDK environment", self)
+	}
 }
 
 #[derive(Debug, Error)]
@@ -141,12 +151,14 @@ pub enum RequiredLibsError {
 }
 
 impl Reportable for RequiredLibsError {
-	fn report(&self) -> Report { Report::error("Failed to get list of required libs", self) }
+	fn report(&self) -> Report {
+		Report::error("Failed to get list of required libs", self)
+	}
 }
 
 #[derive(Debug, Clone)]
 pub struct Env {
-	ndk_home:PathBuf,
+	ndk_home: PathBuf,
 }
 
 impl Env {
@@ -154,9 +166,11 @@ impl Env {
 		let ndk_home = std::env::var("NDK_HOME")
 			.map_err(Error::NdkHomeNotSet)
 			.map(PathBuf::from)
-			.and_then(|ndk_home| {
-			if ndk_home.is_dir() { Ok(ndk_home) } else { Err(Error::NdkHomeNotADir) }
-		})?;
+			.and_then(
+				|ndk_home| {
+					if ndk_home.is_dir() { Ok(ndk_home) } else { Err(Error::NdkHomeNotADir) }
+				},
+			)?;
 
 		let env = Self { ndk_home };
 
@@ -165,15 +179,16 @@ impl Env {
 		if version >= MIN_NDK_VERSION {
 			Ok(env)
 		} else {
-			Err(Error::VersionTooLow { you_have:version, you_need:MIN_NDK_VERSION })
+			Err(Error::VersionTooLow { you_have: version, you_need: MIN_NDK_VERSION })
 		}
 	}
 
-	pub fn home(&self) -> &Path { &self.ndk_home }
+	pub fn home(&self) -> &Path {
+		&self.ndk_home
+	}
 
 	pub fn version(&self) -> Result<source_props::Revision, source_props::Error> {
-		SourceProps::from_path(self.ndk_home.join("source.properties"))
-			.map(|props| props.pkg.revision)
+		SourceProps::from_path(self.ndk_home.join("source.properties")).map(|props| props.pkg.revision)
 	}
 
 	pub fn prebuilt_dir(&self) -> Result<PathBuf, MissingToolError> {
@@ -188,27 +203,22 @@ impl Env {
 		MissingToolError::check_dir(self.prebuilt_dir()?.join("bin"), "tools")
 	}
 
-	pub fn compiler_path(
-		&self,
-		compiler:Compiler,
-		triple:&str,
-		min_api:u32,
-	) -> Result<PathBuf, MissingToolError> {
+	pub fn compiler_path(&self, compiler: Compiler, triple: &str, min_api: u32) -> Result<PathBuf, MissingToolError> {
 		MissingToolError::check_file(
 			self.tool_dir()?.join(format!("{}{}-{}", triple, min_api, compiler.as_str())),
 			compiler.as_str(),
 		)
 	}
 
-	pub fn binutil_path(&self, binutil:Binutil, triple:&str) -> Result<PathBuf, MissingToolError> {
+	pub fn binutil_path(&self, binutil: Binutil, triple: &str) -> Result<PathBuf, MissingToolError> {
 		MissingToolError::check_file(
 			self.tool_dir()?.join(format!("{}-{}", triple, binutil.as_str())),
 			binutil.as_str(),
 		)
 	}
 
-	pub fn libcxx_shared_path(&self, target:Target<'_>) -> Result<PathBuf, MissingToolError> {
-		static LIB:&str = "libc++_shared.so";
+	pub fn libcxx_shared_path(&self, target: Target<'_>) -> Result<PathBuf, MissingToolError> {
+		static LIB: &str = "libc++_shared.so";
 
 		let ndk_ver = self.version().unwrap_or_default();
 
@@ -227,7 +237,7 @@ impl Env {
 		MissingToolError::check_file(so_path.join(LIB), LIB)
 	}
 
-	pub fn ar_path(&self, triple:&str) -> Result<PathBuf, MissingToolError> {
+	pub fn ar_path(&self, triple: &str) -> Result<PathBuf, MissingToolError> {
 		let ndk_ver = self.version().unwrap_or_default();
 
 		let bin_path = if ndk_ver.triple.major >= 23 {
@@ -239,7 +249,7 @@ impl Env {
 		MissingToolError::check_file(self.tool_dir()?.join(bin_path), "ar")
 	}
 
-	fn readelf_path(&self, triple:&str) -> Result<PathBuf, MissingToolError> {
+	fn readelf_path(&self, triple: &str) -> Result<PathBuf, MissingToolError> {
 		let ndk_ver = self.version().unwrap_or_default();
 
 		let bin_path = if ndk_ver.triple.major >= 23 {
@@ -251,11 +261,7 @@ impl Env {
 		MissingToolError::check_file(self.tool_dir()?.join(bin_path), "readelf")
 	}
 
-	pub fn required_libs(
-		&self,
-		elf:&Path,
-		triple:&str,
-	) -> Result<HashSet<String>, RequiredLibsError> {
+	pub fn required_libs(&self, elf: &Path, triple: &str) -> Result<HashSet<String>, RequiredLibsError> {
 		let elf_path = dunce::simplified(elf).to_owned();
 
 		Ok(regex_multi_line!(r"\(NEEDED\)\s+Shared library: \[(.+)\]")
@@ -271,8 +277,7 @@ impl Env {
 					.as_str(),
 			)
 			.map(|caps| {
-				let lib =
-					caps.get(1).expect("developer error: regex match had no captures").as_str();
+				let lib = caps.get(1).expect("developer error: regex match had no captures").as_str();
 
 				log::info!("{:?} requires shared lib {:?}", elf, lib);
 

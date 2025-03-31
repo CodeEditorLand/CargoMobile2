@@ -10,11 +10,13 @@ pub enum NoiseLevel {
 }
 
 impl Default for NoiseLevel {
-	fn default() -> Self { Self::Polite }
+	fn default() -> Self {
+		Self::Polite
+	}
 }
 
 impl NoiseLevel {
-	pub fn from_occurrences(occurrences:u64) -> Self {
+	pub fn from_occurrences(occurrences: u64) -> Self {
 		match occurrences {
 			0 => Self::Polite,
 			1 => Self::LoudAndProud,
@@ -22,11 +24,17 @@ impl NoiseLevel {
 		}
 	}
 
-	pub fn polite(self) -> bool { matches!(self, Self::Polite) }
+	pub fn polite(self) -> bool {
+		matches!(self, Self::Polite)
+	}
 
-	pub fn loud(self) -> bool { matches!(self, Self::LoudAndProud) }
+	pub fn loud(self) -> bool {
+		matches!(self, Self::LoudAndProud)
+	}
 
-	pub fn pedantic(self) -> bool { matches!(self, Self::FranklyQuitePedantic) }
+	pub fn pedantic(self) -> bool {
+		matches!(self, Self::FranklyQuitePedantic)
+	}
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -36,11 +44,17 @@ pub enum Profile {
 }
 
 impl Profile {
-	pub fn from_flag(flag:bool) -> Self { if flag { Self::Release } else { Self::Debug } }
+	pub fn from_flag(flag: bool) -> Self {
+		if flag { Self::Release } else { Self::Debug }
+	}
 
-	pub fn debug(self) -> bool { matches!(self, Self::Debug) }
+	pub fn debug(self) -> bool {
+		matches!(self, Self::Debug)
+	}
 
-	pub fn release(self) -> bool { matches!(self, Self::Release) }
+	pub fn release(self) -> bool {
+		matches!(self, Self::Release)
+	}
 
 	pub fn as_str(&self) -> &'static str {
 		match self {

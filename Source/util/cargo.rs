@@ -4,83 +4,82 @@ use crate::{DuctExpressionExt, env::ExplicitEnv};
 
 #[derive(Debug)]
 pub struct CargoCommand<'a> {
-	subcommand:&'a str,
-	verbose:bool,
-	package:Option<&'a str>,
-	manifest_path:Option<PathBuf>,
-	target:Option<&'a str>,
-	no_default_features:bool,
-	features:Option<&'a [String]>,
-	args:Option<&'a [String]>,
-	release:bool,
+	subcommand: &'a str,
+	verbose: bool,
+	package: Option<&'a str>,
+	manifest_path: Option<PathBuf>,
+	target: Option<&'a str>,
+	no_default_features: bool,
+	features: Option<&'a [String]>,
+	args: Option<&'a [String]>,
+	release: bool,
 }
 
 impl<'a> CargoCommand<'a> {
-	pub fn new(subcommand:&'a str) -> Self {
+	pub fn new(subcommand: &'a str) -> Self {
 		Self {
 			subcommand,
-			verbose:Default::default(),
-			package:Default::default(),
-			manifest_path:Default::default(),
-			target:Default::default(),
-			no_default_features:Default::default(),
-			features:Default::default(),
-			args:Default::default(),
-			release:Default::default(),
+			verbose: Default::default(),
+			package: Default::default(),
+			manifest_path: Default::default(),
+			target: Default::default(),
+			no_default_features: Default::default(),
+			features: Default::default(),
+			args: Default::default(),
+			release: Default::default(),
 		}
 	}
 
-	pub fn with_verbose(mut self, verbose:bool) -> Self {
+	pub fn with_verbose(mut self, verbose: bool) -> Self {
 		self.verbose = verbose;
 
 		self
 	}
 
-	pub fn with_package(mut self, package:Option<&'a str>) -> Self {
+	pub fn with_package(mut self, package: Option<&'a str>) -> Self {
 		self.package = package;
 
 		self
 	}
 
-	pub fn with_manifest_path(mut self, manifest_path:Option<PathBuf>) -> Self {
-		self.manifest_path = manifest_path.map(|manifest_path| {
-			dunce::canonicalize(manifest_path).expect("Failed to canonicalize manifest path")
-		});
+	pub fn with_manifest_path(mut self, manifest_path: Option<PathBuf>) -> Self {
+		self.manifest_path = manifest_path
+			.map(|manifest_path| dunce::canonicalize(manifest_path).expect("Failed to canonicalize manifest path"));
 
 		self
 	}
 
-	pub fn with_target(mut self, target:Option<&'a str>) -> Self {
+	pub fn with_target(mut self, target: Option<&'a str>) -> Self {
 		self.target = target;
 
 		self
 	}
 
-	pub fn with_no_default_features(mut self, no_default_features:bool) -> Self {
+	pub fn with_no_default_features(mut self, no_default_features: bool) -> Self {
 		self.no_default_features = no_default_features;
 
 		self
 	}
 
-	pub fn with_features(mut self, features:Option<&'a [String]>) -> Self {
+	pub fn with_features(mut self, features: Option<&'a [String]>) -> Self {
 		self.features = features;
 
 		self
 	}
 
-	pub fn with_args(mut self, args:Option<&'a [String]>) -> Self {
+	pub fn with_args(mut self, args: Option<&'a [String]>) -> Self {
 		self.args = args;
 
 		self
 	}
 
-	pub fn with_release(mut self, release:bool) -> Self {
+	pub fn with_release(mut self, release: bool) -> Self {
 		self.release = release;
 
 		self
 	}
 
-	pub fn build(self, env:&impl ExplicitEnv) -> duct::Expression {
+	pub fn build(self, env: &impl ExplicitEnv) -> duct::Expression {
 		let mut args = vec![self.subcommand.to_owned()];
 
 		if self.verbose {
@@ -96,10 +95,7 @@ impl<'a> CargoCommand<'a> {
 				log::error!("manifest path {:?} doesn't exist!", manifest_path);
 			}
 
-			args.extend_from_slice(&[
-				"--manifest-path".into(),
-				manifest_path.to_string_lossy().to_string(),
-			]);
+			args.extend_from_slice(&["--manifest-path".into(), manifest_path.to_string_lossy().to_string()]);
 		}
 
 		if let Some(target) = self.target {

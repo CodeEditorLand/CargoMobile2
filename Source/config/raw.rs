@@ -1,6 +1,5 @@
 use std::{
-	fs,
-	io,
+	fs, io,
 	path::{Path, PathBuf},
 };
 
@@ -25,7 +24,9 @@ pub enum PromptError {
 }
 
 impl Reportable for PromptError {
-	fn report(&self) -> Report { Report::error("Prompt error", self) }
+	fn report(&self) -> Report {
+		Report::error("Prompt error", self)
+	}
 }
 
 #[derive(Debug, Error)]
@@ -38,7 +39,9 @@ pub enum DetectError {
 }
 
 impl Reportable for DetectError {
-	fn report(&self) -> Report { Report::error("Detection error", self) }
+	fn report(&self) -> Report {
+		Report::error("Detection error", self)
+	}
 }
 
 #[derive(Debug, Error)]
@@ -46,9 +49,9 @@ pub enum LoadError {
 	#[error("Failed to canonicalize path while searching for config file: {0}")]
 	Discover(io::Error),
 	#[error("Failed to read config file at {path}: {cause}")]
-	Read { path:PathBuf, cause:io::Error },
+	Read { path: PathBuf, cause: io::Error },
 	#[error("Failed to parse config file at {path}: {cause}")]
-	Parse { path:PathBuf, cause:toml::de::Error },
+	Parse { path: PathBuf, cause: toml::de::Error },
 }
 
 #[derive(Debug, Error)]
@@ -60,20 +63,22 @@ pub enum WriteError {
 }
 
 impl Reportable for WriteError {
-	fn report(&self) -> Report { Report::error("Failed to write config", self) }
+	fn report(&self) -> Report {
+		Report::error("Failed to write config", self)
+	}
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Raw {
-	pub app:app::Raw,
+	pub app: app::Raw,
 	#[cfg(target_os = "macos")]
-	pub apple:Option<apple::config::Raw>,
-	pub android:Option<android::config::Raw>,
+	pub apple: Option<apple::config::Raw>,
+	pub android: Option<android::config::Raw>,
 }
 
 impl Raw {
-	pub fn prompt(wrapper:&TextWrapper) -> Result<Self, PromptError> {
+	pub fn prompt(wrapper: &TextWrapper) -> Result<Self, PromptError> {
 		let app = app::Raw::prompt(wrapper).map_err(PromptError::AppFailed)?;
 		#[cfg(target_os = "macos")]
 		let apple = apple::config::Raw::prompt(wrapper).map_err(PromptError::AppleFailed)?;
@@ -81,12 +86,12 @@ impl Raw {
 		Ok(Self {
 			app,
 			#[cfg(target_os = "macos")]
-			apple:Some(apple),
-			android:None,
+			apple: Some(apple),
+			android: None,
 		})
 	}
 
-	pub fn detect(wrapper:&TextWrapper) -> Result<Self, DetectError> {
+	pub fn detect(wrapper: &TextWrapper) -> Result<Self, DetectError> {
 		let app = app::Raw::detect(wrapper).map_err(DetectError::AppFailed)?;
 		#[cfg(target_os = "macos")]
 		let apple = apple::config::Raw::detect().map_err(DetectError::AppleFailed)?;
@@ -94,12 +99,12 @@ impl Raw {
 		Ok(Self {
 			app,
 			#[cfg(target_os = "macos")]
-			apple:Some(apple),
-			android:None,
+			apple: Some(apple),
+			android: None,
 		})
 	}
 
-	pub fn discover_root(cwd:impl AsRef<Path>) -> io::Result<Option<PathBuf>> {
+	pub fn discover_root(cwd: impl AsRef<Path>) -> io::Result<Option<PathBuf>> {
 		let file_name = super::file_name();
 
 		let mut path = cwd.as_ref().canonicalize()?.join(&file_name);
@@ -125,23 +130,23 @@ impl Raw {
 		Ok(Some(path))
 	}
 
-	pub fn load(cwd:impl AsRef<Path>) -> Result<Option<(PathBuf, Self)>, LoadError> {
+	pub fn load(cwd: impl AsRef<Path>) -> Result<Option<(PathBuf, Self)>, LoadError> {
 		Self::discover_root(cwd)
 			.map_err(LoadError::Discover)?
 			.map(|root_dir| {
 				let path = root_dir.join(super::file_name());
 
-				let toml_str = fs::read_to_string(&path)
-					.map_err(|cause| LoadError::Read { path:path.clone(), cause })?;
+				let toml_str =
+					fs::read_to_string(&path).map_err(|cause| LoadError::Read { path: path.clone(), cause })?;
 
 				toml::from_str::<Self>(&toml_str)
 					.map(|raw| (root_dir, raw))
-					.map_err(|cause| LoadError::Parse { path:path.clone(), cause })
+					.map_err(|cause| LoadError::Parse { path: path.clone(), cause })
 			})
 			.transpose()
 	}
 
-	pub fn write(&self, root_dir:&Path) -> Result<(), WriteError> {
+	pub fn write(&self, root_dir: &Path) -> Result<(), WriteError> {
 		let toml_str = toml::to_string(self).map_err(WriteError::Serialize)?;
 
 		let path = root_dir.join(super::file_name());

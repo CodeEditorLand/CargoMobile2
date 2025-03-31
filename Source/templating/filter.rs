@@ -13,18 +13,14 @@ use crate::{
 
 #[derive(Debug)]
 pub enum FilterError {
-	ReadDirFailed { path:PathBuf, cause:io::Error },
+	ReadDirFailed { path: PathBuf, cause: io::Error },
 }
 
 impl Display for FilterError {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::ReadDirFailed { path, cause } => {
-				write!(
-					f,
-					"App root directory {:?} couldn't be checked for emptiness: {}",
-					path, cause
-				)
+				write!(f, "App root directory {:?} couldn't be checked for emptiness: {}", path, cause)
 			},
 		}
 	}
@@ -33,15 +29,11 @@ impl Display for FilterError {
 #[derive(Debug)]
 pub enum Filter {
 	WildWest,
-	Protected { unprotected:Gitignore },
+	Protected { unprotected: Gitignore },
 }
 
 impl Filter {
-	pub fn new(
-		config:&Config,
-		config_origin:Origin,
-		dot_first_init_exists:bool,
-	) -> Result<Self, FilterError> {
+	pub fn new(config: &Config, config_origin: Origin, dot_first_init_exists: bool) -> Result<Self, FilterError> {
 		if config_origin.freshly_minted() {
 			log::info!(
 				"config freshly minted, so we're assuming a brand new project; using `WildWest` \
@@ -93,10 +85,7 @@ impl Filter {
 		move |action| {
 			match self {
 				Self::WildWest => {
-					log::debug!(
-						"filtering strategy is `WildWest`, so action will be processed: {:#?}",
-						action
-					);
+					log::debug!("filtering strategy is `WildWest`, so action will be processed: {:#?}", action);
 
 					true
 				},
@@ -109,15 +98,9 @@ impl Filter {
 						.is_ignore();
 
 					if ignored {
-						log::debug!(
-							"action has unprotected src, so will be processed: {:#?}",
-							action
-						);
+						log::debug!("action has unprotected src, so will be processed: {:#?}", action);
 					} else {
-						log::debug!(
-							"action has protected src, so won't be processed: {:#?}",
-							action
-						);
+						log::debug!("action has protected src, so won't be processed: {:#?}", action);
 					}
 
 					ignored

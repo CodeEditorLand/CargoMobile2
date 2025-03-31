@@ -15,12 +15,14 @@ pub enum Error {
 }
 
 impl Reportable for Error {
-	fn report(&self) -> Report { Report::error("Failed to initialize base environment", self) }
+	fn report(&self) -> Report {
+		Report::error("Failed to initialize base environment", self)
+	}
 }
 
 #[derive(Clone, Debug)]
 pub struct Env {
-	vars:HashMap<String, std::ffi::OsString>,
+	vars: HashMap<String, std::ffi::OsString>,
 }
 
 impl Env {
@@ -46,9 +48,11 @@ impl Env {
 		Ok(Self { vars })
 	}
 
-	pub fn path(&self) -> &OsString { self.vars.get("PATH").unwrap() }
+	pub fn path(&self) -> &OsString {
+		self.vars.get("PATH").unwrap()
+	}
 
-	pub fn prepend_to_path(mut self, path:impl AsRef<Path>) -> Self {
+	pub fn prepend_to_path(mut self, path: impl AsRef<Path>) -> Self {
 		let mut path = path.as_ref().as_os_str().to_os_string();
 
 		path.push(":");
@@ -60,9 +64,11 @@ impl Env {
 		self
 	}
 
-	pub fn insert_env_var(&mut self, key:String, value:OsString) { self.vars.insert(key, value); }
+	pub fn insert_env_var(&mut self, key: String, value: OsString) {
+		self.vars.insert(key, value);
+	}
 
-	pub fn explicit_env_vars(mut self, vars:HashMap<String, OsString>) -> Self {
+	pub fn explicit_env_vars(mut self, vars: HashMap<String, OsString>) -> Self {
 		self.vars.extend(vars);
 
 		self
@@ -70,5 +76,7 @@ impl Env {
 }
 
 impl ExplicitEnv for Env {
-	fn explicit_env(&self) -> HashMap<String, OsString> { self.vars.clone() }
+	fn explicit_env(&self) -> HashMap<String, OsString> {
+		self.vars.clone()
+	}
 }

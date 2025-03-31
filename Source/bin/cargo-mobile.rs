@@ -4,22 +4,10 @@
 use std::path::PathBuf;
 
 use cargo_mobile2::{
-	NAME,
-	doctor,
-	init,
-	update,
+	NAME, doctor, init, update,
 	util::{
 		self,
-		cli::{
-			self,
-			Exec,
-			GlobalFlags,
-			Report,
-			Reportable,
-			TextWrapper,
-			VERSION_LONG,
-			VERSION_SHORT,
-		},
+		cli::{self, Exec, GlobalFlags, Report, Reportable, TextWrapper, VERSION_LONG, VERSION_SHORT},
 	},
 };
 use structopt::StructOpt;
@@ -34,9 +22,9 @@ use structopt::StructOpt;
 )]
 pub struct Input {
 	#[structopt(flatten)]
-	flags:GlobalFlags,
+	flags: GlobalFlags,
 	#[structopt(subcommand)]
-	command:Command,
+	command: Command,
 }
 
 #[derive(Clone, Debug, StructOpt)]
@@ -44,42 +32,42 @@ pub enum Command {
 	#[structopt(name = "init", about = "Creates a new project in the current working directory")]
 	Init {
 		#[structopt(flatten)]
-		skip_dev_tools:cli::SkipDevTools,
+		skip_dev_tools: cli::SkipDevTools,
 		#[structopt(flatten)]
-		skip_targets_install:cli::SkipTargetsInstall,
+		skip_targets_install: cli::SkipTargetsInstall,
 		#[structopt(flatten)]
-		reinstall_deps:cli::ReinstallDeps,
+		reinstall_deps: cli::ReinstallDeps,
 		#[structopt(long = "open", help = "Open in default code editor")]
-		open_in_editor:bool,
+		open_in_editor: bool,
 		#[structopt(long = "submodule-commit", help = "Template pack commit to checkout")]
-		submodule_commit:Option<String>,
+		submodule_commit: Option<String>,
 	},
 	#[structopt(name = "new", about = "Creates a new project in a new directory")]
 	New {
 		#[structopt(flatten)]
-		skip_dev_tools:cli::SkipDevTools,
+		skip_dev_tools: cli::SkipDevTools,
 		#[structopt(flatten)]
-		skip_targets_install:cli::SkipTargetsInstall,
+		skip_targets_install: cli::SkipTargetsInstall,
 		#[structopt(flatten)]
-		reinstall_deps:cli::ReinstallDeps,
+		reinstall_deps: cli::ReinstallDeps,
 		#[structopt(long = "open", help = "Open in default code editor")]
-		open_in_editor:bool,
+		open_in_editor: bool,
 		#[structopt(long = "submodule-commit", help = "Template pack commit to checkout")]
-		submodule_commit:Option<String>,
+		submodule_commit: Option<String>,
 		#[structopt(
 			name = "DIRECTORY",
 			help = "New directory to create project in",
 			index = 1,
 			required = true
 		)]
-		directory:PathBuf,
+		directory: PathBuf,
 	},
 	#[structopt(name = "open", about = "Open project in default code editor")]
 	Open,
 	#[structopt(name = "update", about = "Update `cargo-mobile2`")]
 	Update {
 		#[structopt(long = "init", help = "Regenerate project if update succeeds")]
-		init:bool,
+		init: bool,
 	},
 	#[cfg_attr(
 		target_os = "macos",
@@ -106,12 +94,12 @@ pub enum Command {
 pub enum Error {
 	InitFailed(init::Error),
 	DirCreationFailed {
-		path:PathBuf,
-		source:std::io::Error,
+		path: PathBuf,
+		source: std::io::Error,
 	},
 	DirChangeFailed {
-		path:PathBuf,
-		source:std::io::Error,
+		path: PathBuf,
+		source: std::io::Error,
 	},
 	OpenFailed(util::OpenInEditorError),
 	UpdateFailed(update::Error),
@@ -131,9 +119,7 @@ impl Reportable for Error {
 			Self::DirChangeFailed { path, source } => {
 				Report::error(format!("Failed to change current directory {:?}", path), source)
 			},
-			Self::OpenFailed(err) => {
-				Report::error("Failed to open project in default code editor", err)
-			},
+			Self::OpenFailed(err) => Report::error("Failed to open project in default code editor", err),
 			Self::UpdateFailed(err) => Report::error("Failed to update `cargo-mobile2`", err),
 			#[cfg(target_os = "macos")]
 			Self::AppleFailed(err) => err.report(),
@@ -146,9 +132,11 @@ impl Reportable for Error {
 impl Exec for Input {
 	type Report = Error;
 
-	fn global_flags(&self) -> GlobalFlags { self.flags }
+	fn global_flags(&self) -> GlobalFlags {
+		self.flags
+	}
 
-	fn exec(self, wrapper:&TextWrapper) -> Result<(), Self::Report> {
+	fn exec(self, wrapper: &TextWrapper) -> Result<(), Self::Report> {
 		let Self { flags, command } = self;
 
 		let GlobalFlags { non_interactive, .. } = flags;
@@ -160,20 +148,18 @@ impl Exec for Input {
 				reinstall_deps: cli::ReinstallDeps { reinstall_deps },
 				open_in_editor,
 				submodule_commit,
-			} => {
-				init::exec(
-					wrapper,
-					non_interactive,
-					skip_dev_tools,
-					skip_targets_install,
-					reinstall_deps,
-					open_in_editor,
-					submodule_commit,
-					".",
-				)
-				.map(|_| ())
-				.map_err(|e| Error::InitFailed(*e))
-			},
+			} => init::exec(
+				wrapper,
+				non_interactive,
+				skip_dev_tools,
+				skip_targets_install,
+				reinstall_deps,
+				open_in_editor,
+				submodule_commit,
+				".",
+			)
+			.map(|_| ())
+			.map_err(|e| Error::InitFailed(*e)),
 			Command::New {
 				skip_dev_tools: cli::SkipDevTools { skip_dev_tools },
 				skip_targets_install: cli::SkipTargetsInstall { skip_targets_install },
@@ -182,12 +168,11 @@ impl Exec for Input {
 				submodule_commit,
 				directory,
 			} => {
-				std::fs::create_dir_all(&directory).map_err(|source| {
-					Error::DirCreationFailed { path:directory.clone(), source }
-				})?;
+				std::fs::create_dir_all(&directory)
+					.map_err(|source| Error::DirCreationFailed { path: directory.clone(), source })?;
 
 				std::env::set_current_dir(&directory)
-					.map_err(|source| Error::DirChangeFailed { path:directory, source })?;
+					.map_err(|source| Error::DirChangeFailed { path: directory, source })?;
 
 				init::exec(
 					wrapper,
@@ -223,19 +208,17 @@ impl Exec for Input {
 				Ok(())
 			},
 			#[cfg(target_os = "macos")]
-			Command::Apple(command) => {
-				cargo_mobile2::apple::cli::Input::new(flags, command)
-					.exec(wrapper)
-					.map_err(Error::AppleFailed)
-			},
-			Command::Android(command) => {
-				cargo_mobile2::android::cli::Input::new(flags, command)
-					.exec(wrapper)
-					.map_err(Error::AndroidFailed)
-			},
+			Command::Apple(command) => cargo_mobile2::apple::cli::Input::new(flags, command)
+				.exec(wrapper)
+				.map_err(Error::AppleFailed),
+			Command::Android(command) => cargo_mobile2::android::cli::Input::new(flags, command)
+				.exec(wrapper)
+				.map_err(Error::AndroidFailed),
 			Command::Doctor => doctor::exec(wrapper).map_err(Error::DoctorFailed),
 		}
 	}
 }
 
-fn main() { cli::exec::<Input>(NAME) }
+fn main() {
+	cli::exec::<Input>(NAME)
+}

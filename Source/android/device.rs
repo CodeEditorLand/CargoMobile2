@@ -17,8 +17,7 @@ use crate::{
 	util::{
 		self,
 		cli::{Report, Reportable},
-		last_modified,
-		prefix_path,
+		last_modified, prefix_path,
 	},
 };
 
@@ -121,14 +120,14 @@ impl Reportable for StacktraceError {
 
 #[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Device<'a> {
-	serial_no:String,
-	name:String,
-	model:String,
-	target:&'a Target<'a>,
+	serial_no: String,
+	name: String,
+	model: String,
+	target: &'a Target<'a>,
 }
 
 impl<'a> Display for Device<'a> {
-	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}", self.name)?;
 
 		if self.model != self.name {
@@ -140,21 +139,31 @@ impl<'a> Display for Device<'a> {
 }
 
 impl<'a> Device<'a> {
-	pub(super) fn new(serial_no:String, name:String, model:String, target:&'a Target<'a>) -> Self {
+	pub(super) fn new(serial_no: String, name: String, model: String, target: &'a Target<'a>) -> Self {
 		Self { serial_no, name, model, target }
 	}
 
-	pub fn target(&self) -> &'a Target<'a> { self.target }
+	pub fn target(&self) -> &'a Target<'a> {
+		self.target
+	}
 
-	pub fn name(&self) -> &str { &self.name }
+	pub fn name(&self) -> &str {
+		&self.name
+	}
 
-	pub fn model(&self) -> &str { &self.model }
+	pub fn model(&self) -> &str {
+		&self.model
+	}
 
-	pub fn serial_no(&self) -> &str { &self.serial_no }
+	pub fn serial_no(&self) -> &str {
+		&self.serial_no
+	}
 
-	fn adb(&self, env:&Env) -> duct::Expression { adb::adb(env, ["-s", &self.serial_no]) }
+	fn adb(&self, env: &Env) -> duct::Expression {
+		adb::adb(env, ["-s", &self.serial_no])
+	}
 
-	pub fn all_apks_paths(config:&Config, profile:Profile, flavor:&str) -> Vec<PathBuf> {
+	pub fn all_apks_paths(config: &Config, profile: Profile, flavor: &str) -> Vec<PathBuf> {
 		profile
 			.suffixes()
 			.iter()
@@ -174,7 +183,7 @@ impl<'a> Device<'a> {
 			.collect()
 	}
 
-	fn wait_device_boot(&self, env:&Env) {
+	fn wait_device_boot(&self, env: &Env) {
 		loop {
 			let cmd = self.adb(env).stderr_capture().stdout_capture().before_spawn(move |cmd| {
 				cmd.args(["shell", "getprop", "init.svc.bootanim"]);
@@ -204,22 +213,17 @@ impl<'a> Device<'a> {
 
 	fn build_apk(
 		&self,
-		config:&Config,
-		env:&Env,
-		noise_level:NoiseLevel,
-		profile:Profile,
+		config: &Config,
+		env: &Env,
+		noise_level: NoiseLevel,
+		profile: Profile,
 	) -> Result<(), apk::ApkError> {
 		apk::build(config, env, noise_level, profile, vec![self.target()], true)?;
 
 		Ok(())
 	}
 
-	fn install_apk(
-		&self,
-		config:&Config,
-		env:&Env,
-		profile:Profile,
-	) -> Result<(), ApkInstallError> {
+	fn install_apk(&self, config: &Config, env: &Env, profile: Profile) -> Result<(), ApkInstallError> {
 		let flavor = self.target.arch;
 
 		let apk_path = apk::apks_paths(config, profile, flavor)
@@ -244,17 +248,17 @@ impl<'a> Device<'a> {
 
 	fn build_aab(
 		&self,
-		config:&Config,
-		env:&Env,
-		noise_level:NoiseLevel,
-		profile:Profile,
+		config: &Config,
+		env: &Env,
+		noise_level: NoiseLevel,
+		profile: Profile,
 	) -> Result<(), aab::AabError> {
 		aab::build(config, env, noise_level, profile, vec![self.target()], false)?;
 
 		Ok(())
 	}
 
-	fn build_apks_from_aab(&self, config:&Config, profile:Profile) -> Result<(), ApksBuildError> {
+	fn build_apks_from_aab(&self, config: &Config, profile: Profile) -> Result<(), ApksBuildError> {
 		let flavor = self.target.arch;
 		// In the case that profile is `Release`, it is safe to pick the first
 		// one which should have the suffix `release` instead of
@@ -285,7 +289,7 @@ impl<'a> Device<'a> {
 		Ok(())
 	}
 
-	fn install_apk_from_aab(&self, config:&Config, profile:Profile) -> Result<(), ApkInstallError> {
+	fn install_apk_from_aab(&self, config: &Config, profile: Profile) -> Result<(), ApkInstallError> {
 		let flavor = self.target.arch;
 
 		let apks_path = Self::all_apks_paths(config, profile, flavor)
@@ -305,7 +309,7 @@ impl<'a> Device<'a> {
 		Ok(())
 	}
 
-	fn wake_screen(&self, env:&Env) -> std::io::Result<()> {
+	fn wake_screen(&self, env: &Env) -> std::io::Result<()> {
 		self.adb(env)
 			.before_spawn(move |cmd| {
 				cmd.args(["shell", "input", "keyevent", "KEYCODE_WAKEUP"]);
@@ -322,14 +326,14 @@ impl<'a> Device<'a> {
 	#[allow(clippy::too_many_arguments)]
 	pub fn run(
 		&self,
-		config:&Config,
-		env:&Env,
-		noise_level:NoiseLevel,
-		profile:Profile,
-		filter_level:Option<FilterLevel>,
-		build_app_bundle:bool,
-		reinstall_deps:bool,
-		activity:String,
+		config: &Config,
+		env: &Env,
+		noise_level: NoiseLevel,
+		profile: Profile,
+		filter_level: Option<FilterLevel>,
+		build_app_bundle: bool,
+		reinstall_deps: bool,
+		activity: String,
 	) -> Result<duct::Handle, RunError> {
 		if build_app_bundle {
 			bundletool::install(reinstall_deps).map_err(RunError::BundletoolInstallFailed)?;
@@ -402,12 +406,9 @@ impl<'a> Device<'a> {
 
 		let pid = stdout.trim().to_string();
 
-		let mut logcat = duct::cmd(
-			env.platform_tools_path().join("adb"),
-			["logcat", "-v", "color", "-s", &filter],
-		)
-		.vars(env.explicit_env())
-		.dup_stdio();
+		let mut logcat = duct::cmd(env.platform_tools_path().join("adb"), ["logcat", "-v", "color", "-s", &filter])
+			.vars(env.explicit_env())
+			.dup_stdio();
 
 		let logcat_filter_specs = config.logcat_filter_specs().to_vec();
 
@@ -424,7 +425,7 @@ impl<'a> Device<'a> {
 		logcat.start().map_err(Into::into)
 	}
 
-	pub fn stacktrace(&self, config:&Config, env:&Env) -> Result<(), StacktraceError> {
+	pub fn stacktrace(&self, config: &Config, env: &Env) -> Result<(), StacktraceError> {
 		let jnilib_path = config
             .app()
             // ndk-stack can't seem to handle spaces in args, no matter
@@ -446,14 +447,13 @@ impl<'a> Device<'a> {
 			})
 			.dup_stdio();
 
-		let stack_command =
-			duct::cmd::<PathBuf, [String; 0]>(env.ndk.home().join(consts::NDK_STACK), [])
-				.vars(env.explicit_env())
-				.env(
-					"PATH",
-					util::prepend_to_path(env.ndk.home().display(), env.path().to_string_lossy()),
-				)
-				.dup_stdio();
+		let stack_command = duct::cmd::<PathBuf, [String; 0]>(env.ndk.home().join(consts::NDK_STACK), [])
+			.vars(env.explicit_env())
+			.env(
+				"PATH",
+				util::prepend_to_path(env.ndk.home().display(), env.path().to_string_lossy()),
+			)
+			.dup_stdio();
 
 		if logcat_command.pipe(stack_command).start()?.wait().is_err() {
 			println!("  -- no stacktrace --");

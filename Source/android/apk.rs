@@ -10,9 +10,7 @@ use crate::{
 	opts::{NoiseLevel, Profile},
 	util::{
 		cli::{Report, Reportable},
-		gradlew,
-		last_modified,
-		prefix_path,
+		gradlew, last_modified, prefix_path,
 	},
 };
 
@@ -33,7 +31,7 @@ impl Reportable for ApkError {
 	}
 }
 
-pub fn apks_paths(config:&Config, profile:Profile, flavor:&str) -> Vec<PathBuf> {
+pub fn apks_paths(config: &Config, profile: Profile, flavor: &str) -> Vec<PathBuf> {
 	profile
 		.suffixes()
 		.iter()
@@ -55,12 +53,12 @@ pub fn apks_paths(config:&Config, profile:Profile, flavor:&str) -> Vec<PathBuf> 
 
 /// Builds APK(s) and returns the built APK(s) paths
 pub fn build(
-	config:&Config,
-	env:&Env,
-	noise_level:NoiseLevel,
-	profile:Profile,
-	targets:Vec<&Target>,
-	split_per_abi:bool,
+	config: &Config,
+	env: &Env,
+	noise_level: NoiseLevel,
+	profile: Profile,
+	targets: Vec<&Target>,
+	split_per_abi: bool,
 ) -> Result<Vec<PathBuf>, ApkError> {
 	JniLibs::remove_broken_links(config).map_err(ApkError::LibSymlinkCleaningFailed)?;
 
@@ -76,14 +74,8 @@ pub fn build(
 
 		if !targets.is_empty() {
 			args.extend_from_slice(&[
-				format!(
-					"-PabiList={}",
-					targets.iter().map(|t| t.abi).collect::<Vec<_>>().join(",")
-				),
-				format!(
-					"-ParchList={}",
-					targets.iter().map(|t| t.arch).collect::<Vec<_>>().join(",")
-				),
+				format!("-PabiList={}", targets.iter().map(|t| t.abi).collect::<Vec<_>>().join(",")),
+				format!("-ParchList={}", targets.iter().map(|t| t.arch).collect::<Vec<_>>().join(",")),
 				format!(
 					"-PtargetList={}",
 					targets
@@ -144,12 +136,12 @@ pub mod cli {
 	use super::*;
 
 	pub fn build(
-		config:&Config,
-		env:&Env,
-		noise_level:NoiseLevel,
-		profile:Profile,
-		targets:Vec<&Target>,
-		split_per_abi:bool,
+		config: &Config,
+		env: &Env,
+		noise_level: NoiseLevel,
+		profile: Profile,
+		targets: Vec<&Target>,
+		split_per_abi: bool,
 	) -> Result<(), ApkError> {
 		println!(
 			"Building{} APK{} for {} ...\n",
