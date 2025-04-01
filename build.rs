@@ -4,7 +4,7 @@ fn main() {}
 #[cfg(feature = "cli")]
 fn main() {
 	use std::{path::PathBuf, process::Command};
-	#[path = "src/bicycle/mod.rs"]
+	#[path = "Source/bicycle/mod.rs"]
 	mod bicycle;
 
 	let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
