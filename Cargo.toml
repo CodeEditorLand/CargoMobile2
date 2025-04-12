@@ -1,3 +1,31 @@
+[package]
+name = "cargo-mobile2"
+version = "0.18.1"
+authors = [
+  "Tauri Programme within The Commons Conservancy",
+  "Brainium Studios LLC",
+  "Francesca Lovebloom <francesca@brainiumstudios.com>"
+]
+edition = "2021"
+description = "Rust on mobile made easy!"
+documentation = "https://docs.rs/cargo-mobile2"
+repository = "https://github.com/tauri-apps/cargo-mobile2"
+readme = "README.md"
+keywords = [ "cargo", "mobile", "ios", "android", "tauri" ]
+categories = [ "development-tools::cargo-plugins" ]
+license = "Apache-2.0 OR MIT"
+rust-version = "1.76"
+
+[package.metadata.docs.rs]
+no-default-features = true
+features = ["native-tls"]
+default-target = "x86_64-unknown-linux-gnu"
+targets = [
+  "x86_64-pc-windows-msvc",
+  "x86_64-unknown-linux-gnu",
+  "x86_64-apple-darwin",
+]
+
 [[bin]]
 name = "cargo-mobile"
 path = "Source/bin/cargo-mobile.rs"
