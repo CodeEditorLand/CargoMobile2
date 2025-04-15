@@ -318,6 +318,7 @@ impl Exec for Input {
                     |target: &Target| {
                         target
                             .build(
+                                None,
                                 config,
                                 &env,
                                 noise_level,
@@ -341,13 +342,15 @@ impl Exec for Input {
                     &detect_target_ok,
                     &env,
                     |target: &Target| {
-                        let mut app_version = config.bundle_version().clone();
+                        let mut app_version = config.bundle_version().to_string();
                         if let Some(build_number) = build_number {
-                            app_version.push_extra(build_number);
+                            app_version.push('.');
+                            app_version.push_str(&build_number.to_string());
                         }
 
                         target
                             .build(
+                                None,
                                 config,
                                 &env,
                                 noise_level,
