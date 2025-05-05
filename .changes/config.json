@@ -1,0 +1,17 @@
+{
+  "gitSiteUrl": "https://github.com/tauri-apps/cargo-mobile2/",
+  "pkgManagers": {
+    "rust": {
+      "version": true,
+      "getPublishedVersion": "cargo search ${ pkg.pkg } --limit 1 | sed -nE 's/^[^\"]*\"//; s/\".*//1p' -",
+      "publish": ["cargo publish"]
+    }
+  },
+  "packages": {
+    "cargo-mobile2": {
+      "path": ".",
+      "postversion": ["cargo check"],
+      "manager": "rust"
+    }
+  }
+}

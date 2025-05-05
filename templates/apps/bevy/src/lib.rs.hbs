@@ -1,0 +1,27 @@
+use bevy::window::{WindowMode, MonitorSelection};
+use bevy::prelude::*;
+
+#[bevy_main]
+fn main() {
+    App::new()
+        .add_plugins((DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                name: Some("{{app.stylized-name}}".to_string()),
+                resizable: false,
+                mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
+                ..default()
+            }),
+            ..default()
+        }),))
+        .add_systems(Startup, setup)
+        .run();
+}
+
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
+    let texture_handle = asset_server.load("branding/icon.png");
+    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Sprite {image: texture_handle, ..Default::default()});
+}
